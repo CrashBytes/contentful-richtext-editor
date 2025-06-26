@@ -2,36 +2,61 @@
   "name": "@crashbytes/contentful-richtext-editor",
   "version": "1.0.0",
   "description": "A Tiptap-based rich text editor compatible with Contentful's rich text format",
+  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
-  "keywords": ["contentful", "tiptap", "rich-text", "editor", "react"],
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "contentful",
+    "tiptap",
+    "rich-text",
+    "editor",
+    "react"
+  ],
+  "author": "CrashBytes",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CrashBytes/contentful-richtext-editor.git"
+  },
+  "homepage": "https://github.com/CrashBytes/contentful-richtext-editor#readme",
+  "scripts": {
+    "build": "rollup -c",
+    "build:watch": "rollup -c -w",
+    "dev": "rollup -c -w",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
   "peerDependencies": {
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
   },
   "dependencies": {
-    "@tiptap/react": "^2.0.0",
-    "@tiptap/pm": "^2.0.0",
-    "@tiptap/starter-kit": "^2.0.0",
+    "@contentful/rich-text-types": "^16.0.0",
     "@tiptap/extension-link": "^2.0.0",
     "@tiptap/extension-table": "^2.0.0",
-    "@tiptap/extension-table-row": "^2.0.0",
-    "@tiptap/extension-table-header": "^2.0.0",
     "@tiptap/extension-table-cell": "^2.0.0",
+    "@tiptap/extension-table-header": "^2.0.0",
+    "@tiptap/extension-table-row": "^2.0.0",
     "@tiptap/extension-text-style": "^2.0.0",
-    "@contentful/rich-text-types": "^16.0.0"
+    "@tiptap/extension-underline": "^2.0.0",
+    "@tiptap/pm": "^2.0.0",
+    "@tiptap/react": "^2.0.0",
+    "@tiptap/starter-kit": "^2.0.0"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^24.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
-    "typescript": "^5.0.0",
     "rollup": "^3.0.0",
-    "@rollup/plugin-typescript": "^11.0.0",
-    "@rollup/plugin-node-resolve": "^15.0.0",
-    "@rollup/plugin-commonjs": "^24.0.0",
     "rollup-plugin-peer-deps-external": "^2.2.4",
-    "rollup-plugin-postcss": "^4.0.2"
+    "rollup-plugin-postcss": "^4.0.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.0.0"
   }
 }

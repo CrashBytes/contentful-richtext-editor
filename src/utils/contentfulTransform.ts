@@ -183,7 +183,7 @@ export const contentfulToTiptap = (document: Document): TiptapNode => {
             default:
               return null;
           }
-        }).filter(Boolean) || [];
+        }).filter((mark): mark is { type: string } => mark !== null) || [];
 
         return {
           type: 'text',
@@ -206,66 +206,67 @@ export const contentfulToTiptap = (document: Document): TiptapNode => {
 /**
  * Converts Tiptap JSON format to Contentful Rich Text Document
  */
-export const tiptapToContentful = (tiptapDoc: TiptapNode): Document => {
-  const convertNode = (node: TiptapNode): Block | Inline | Text => {
+export const tiptapToContentful = (tiptapDoc: any): Document => {
+  const convertNode = (node: any): Block | Inline | Text => {
     switch (node.type) {
       case 'doc':
         return {
           nodeType: BLOCKS.DOCUMENT,
           data: {},
-          content: node.content?.map(child => convertNode(child)) as Block[],
+          content: node.content?.map((child: any) => convertNode(child)) as Block[],
         };
 
       case 'paragraph':
         return {
           nodeType: BLOCKS.PARAGRAPH,
           data: {},
-          content: node.content?.map(child => convertNode(child)) as (Inline | Text)[],
+          content: node.content?.map((child: any) => convertNode(child)) as (Inline | Text)[],
         };
 
       case 'heading':
         const level = node.attrs?.level || 1;
-        const headingType = {
+        const headingTypes: Record<number, BLOCKS> = {
           1: BLOCKS.HEADING_1,
           2: BLOCKS.HEADING_2,
           3: BLOCKS.HEADING_3,
           4: BLOCKS.HEADING_4,
           5: BLOCKS.HEADING_5,
           6: BLOCKS.HEADING_6,
-        }[level] || BLOCKS.HEADING_1;
+        };
+        const headingType = headingTypes[level] || BLOCKS.HEADING_1;
 
         return {
           nodeType: headingType,
           data: {},
-          content: node.content?.map(child => convertNode(child)) as (Inline | Text)[],
+          content: node.content?.map((child: any) => convertNode(child)) as (Inline | Text)[],
         };
 
       case 'bulletList':
         return {
           nodeType: BLOCKS.UL_LIST,
           data: {},
-          content: node.content?.map(child => convertNode(child)) as Block[],
+          content: node.content?.map((child: any) => convertNode(child)) as Block[],
         };
 
       case 'orderedList':
         return {
           nodeType: BLOCKS.OL_LIST,
           data: {},
-          content: node.content?.map(child => convertNode(child)) as Block[],
+          content: node.content?.map((child: any) => convertNode(child)) as Block[],
         };
 
       case 'listItem':
         return {
           nodeType: BLOCKS.LIST_ITEM,
           data: {},
-          content: node.content?.map(child => convertNode(child)) as Block[],
+          content: node.content?.map((child: any) => convertNode(child)) as Block[],
         };
 
       case 'blockquote':
         return {
           nodeType: BLOCKS.QUOTE,
           data: {},
-          content: node.content?.map(child => convertNode(child)) as Block[],
+          content: node.content?.map((child: any) => convertNode(child)) as Block[],
         };
 
       case 'horizontalRule':
@@ -279,32 +280,32 @@ export const tiptapToContentful = (tiptapDoc: TiptapNode): Document => {
         return {
           nodeType: BLOCKS.TABLE,
           data: {},
-          content: node.content?.map(child => convertNode(child)) as Block[],
+          content: node.content?.map((child: any) => convertNode(child)) as Block[],
         };
 
       case 'tableRow':
         return {
           nodeType: BLOCKS.TABLE_ROW,
           data: {},
-          content: node.content?.map(child => convertNode(child)) as Block[],
+          content: node.content?.map((child: any) => convertNode(child)) as Block[],
         };
 
       case 'tableCell':
         return {
           nodeType: BLOCKS.TABLE_CELL,
           data: {},
-          content: node.content?.map(child => convertNode(child)) as Block[],
+          content: node.content?.map((child: any) => convertNode(child)) as Block[],
         };
 
       case 'tableHeader':
         return {
           nodeType: BLOCKS.TABLE_HEADER_CELL,
           data: {},
-          content: node.content?.map(child => convertNode(child)) as Block[],
+          content: node.content?.map((child: any) => convertNode(child)) as Block[],
         };
 
       case 'text':
-        const marks = node.marks?.map(mark => {
+        const marks = node.marks?.map((mark: any) => {
           switch (mark.type) {
             case 'bold':
               return { type: MARKS.BOLD };
@@ -322,7 +323,7 @@ export const tiptapToContentful = (tiptapDoc: TiptapNode): Document => {
         }).filter(Boolean) || [];
 
         // Check if this text has a link mark
-        const linkMark = node.marks?.find(mark => mark.type === 'link');
+        const linkMark = node.marks?.find((mark: any) => mark.type === 'link');
         if (linkMark) {
           return {
             nodeType: INLINES.HYPERLINK,

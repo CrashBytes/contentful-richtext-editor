@@ -18,7 +18,7 @@ export const ContentfulDocument = Extension.create({
 
   addCommands() {
     return {
-      insertContentfulEntry: (entry: any) => ({ commands }) => {
+      insertContentfulEntry: (entry: any) => ({ commands }: any) => {
         return commands.insertContent({
           type: 'paragraph',
           content: [
@@ -31,7 +31,7 @@ export const ContentfulDocument = Extension.create({
         });
       },
       
-      insertContentfulAsset: (asset: any) => ({ commands }) => {
+      insertContentfulAsset: (asset: any) => ({ commands }: any) => {
         return commands.insertContent({
           type: 'paragraph',
           content: [
@@ -43,6 +43,6 @@ export const ContentfulDocument = Extension.create({
           ],
         });
       },
-    };
+    } as any; // Type assertion to suppress the warning
   },
 });

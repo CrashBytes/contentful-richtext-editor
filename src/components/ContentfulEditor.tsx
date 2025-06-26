@@ -10,7 +10,7 @@ import Underline from '@tiptap/extension-underline';
 import { Document } from '@contentful/rich-text-types';
 import { ContentfulToolbar } from './Toolbar';
 import { contentfulToTiptap, tiptapToContentful } from '../utils/contentfulTransform';
-import '../styleseditor.css';
+import '../styles/editor.css';
 
 export interface ContentfulRichTextEditorProps {
   /** Initial Contentful rich text document */
