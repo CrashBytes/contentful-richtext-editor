@@ -20,6 +20,10 @@ export interface ContentfulRichTextEditorProps {
     disabledFeatures?: Array<'bold' | 'italic' | 'underline' | 'link' | 'lists' | 'headings' | 'quote' | 'table' | 'embed'>;
     /** Custom styling options */
     theme?: 'default' | 'minimal' | 'contentful';
+    /** Which heading levels to make available (1-6) */
+    availableHeadings?: Array<1 | 2 | 3 | 4 | 5 | 6>;
+    /** Which text formatting marks to make available */
+    availableMarks?: Array<'bold' | 'italic' | 'underline'>;
 }
 export declare const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps>;
 export default ContentfulRichTextEditor;

@@ -26531,10 +26531,11 @@ const Underline = Mark.create({
     },
 });
 
-const ContentfulToolbar = ({ editor, onEmbedEntry, onEmbedAsset, disabledFeatures = [] }) => {
+const ContentfulToolbar = ({ editor, onEmbedEntry, onEmbedAsset, disabledFeatures = [], availableHeadings = [1, 2, 3, 4, 5, 6], availableMarks = ['bold', 'italic', 'underline'] }) => {
     const [showLinkInput, setShowLinkInput] = React.useState(false);
     const [linkUrl, setLinkUrl] = React.useState('');
     const isDisabled = (feature) => disabledFeatures.includes(feature);
+    const isMarkAvailable = (mark) => availableMarks.includes(mark);
     const handleHeadingChange = (level) => {
         if (level === 0) {
             editor.chain().focus().setParagraph().run();
@@ -26563,14 +26564,15 @@ const ContentfulToolbar = ({ editor, onEmbedEntry, onEmbedAsset, disabledFeature
         editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
     };
     const getActiveHeading = () => {
-        for (let i = 1; i <= 6; i++) {
-            if (editor.isActive('heading', { level: i })) {
-                return `Heading ${i}`;
+        for (const level of availableHeadings) {
+            if (editor.isActive('heading', { level })) {
+                return `Heading ${level}`;
             }
         }
         return 'Normal text';
     };
-    return (jsxRuntime.jsxs("div", { className: "contentful-toolbar", children: [jsxRuntime.jsxs("div", { className: "contentful-toolbar__group", children: [!isDisabled('headings') && (jsxRuntime.jsxs("select", { className: "contentful-toolbar__select", value: getActiveHeading(), onChange: (e) => {
+    const hasHeadings = !isDisabled('headings') && availableHeadings.length > 0;
+    return (jsxRuntime.jsxs("div", { className: "contentful-toolbar", children: [jsxRuntime.jsxs("div", { className: "contentful-toolbar__group", children: [hasHeadings && (jsxRuntime.jsxs("select", { className: "contentful-toolbar__select", value: getActiveHeading(), onChange: (e) => {
                             const value = e.target.value;
                             if (value === 'Normal text') {
                                 handleHeadingChange(0);
@@ -26579,7 +26581,7 @@ const ContentfulToolbar = ({ editor, onEmbedEntry, onEmbedAsset, disabledFeature
                                 const level = parseInt(value.replace('Heading ', ''));
                                 handleHeadingChange(level);
                             }
-                        }, children: [jsxRuntime.jsx("option", { value: "Normal text", children: "Normal text" }), jsxRuntime.jsx("option", { value: "Heading 1", children: "Heading 1" }), jsxRuntime.jsx("option", { value: "Heading 2", children: "Heading 2" }), jsxRuntime.jsx("option", { value: "Heading 3", children: "Heading 3" }), jsxRuntime.jsx("option", { value: "Heading 4", children: "Heading 4" }), jsxRuntime.jsx("option", { value: "Heading 5", children: "Heading 5" }), jsxRuntime.jsx("option", { value: "Heading 6", children: "Heading 6" })] })), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: () => editor.chain().focus().undo().run(), disabled: !editor.can().undo(), title: "Undo", children: "\u21B6" }), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: () => editor.chain().focus().redo().run(), disabled: !editor.can().redo(), title: "Redo", children: "\u21B7" })] }), jsxRuntime.jsx("div", { className: "contentful-toolbar__separator" }), jsxRuntime.jsxs("div", { className: "contentful-toolbar__group", children: [!isDisabled('bold') && (jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('bold') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleBold().run(), title: "Bold", children: jsxRuntime.jsx("strong", { children: "B" }) })), !isDisabled('italic') && (jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('italic') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleItalic().run(), title: "Italic", children: jsxRuntime.jsx("em", { children: "I" }) })), !isDisabled('underline') && (jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('underline') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleUnderline().run(), title: "Underline", children: jsxRuntime.jsx("u", { children: "U" }) })), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", title: "More formatting options", children: "\u22EF" }), !isDisabled('link') && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('link') ? 'contentful-toolbar__button--active' : ''}`, onClick: handleLinkToggle, title: "Link", children: "\uD83D\uDD17" }), showLinkInput && (jsxRuntime.jsxs("div", { className: "contentful-toolbar__link-input", children: [jsxRuntime.jsx("input", { type: "url", value: linkUrl, onChange: (e) => setLinkUrl(e.target.value), placeholder: "Enter URL", onKeyDown: (e) => {
+                        }, children: [jsxRuntime.jsx("option", { value: "Normal text", children: "Normal text" }), availableHeadings.map(level => (jsxRuntime.jsxs("option", { value: `Heading ${level}`, children: ["Heading ", level] }, level)))] })), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: () => editor.chain().focus().undo().run(), disabled: !editor.can().undo(), title: "Undo", children: "\u21B6" }), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: () => editor.chain().focus().redo().run(), disabled: !editor.can().redo(), title: "Redo", children: "\u21B7" })] }), jsxRuntime.jsx("div", { className: "contentful-toolbar__separator" }), jsxRuntime.jsxs("div", { className: "contentful-toolbar__group", children: [!isDisabled('bold') && isMarkAvailable('bold') && (jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('bold') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleBold().run(), title: "Bold", children: jsxRuntime.jsx("strong", { children: "B" }) })), !isDisabled('italic') && isMarkAvailable('italic') && (jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('italic') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleItalic().run(), title: "Italic", children: jsxRuntime.jsx("em", { children: "I" }) })), !isDisabled('underline') && isMarkAvailable('underline') && (jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('underline') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleUnderline().run(), title: "Underline", children: jsxRuntime.jsx("u", { children: "U" }) })), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", title: "More formatting options", children: "\u22EF" }), !isDisabled('link') && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('link') ? 'contentful-toolbar__button--active' : ''}`, onClick: handleLinkToggle, title: "Link", children: "\uD83D\uDD17" }), showLinkInput && (jsxRuntime.jsxs("div", { className: "contentful-toolbar__link-input", children: [jsxRuntime.jsx("input", { type: "url", value: linkUrl, onChange: (e) => setLinkUrl(e.target.value), placeholder: "Enter URL", onKeyDown: (e) => {
                                             if (e.key === 'Enter') {
                                                 handleLinkSubmit();
                                             }
@@ -27270,59 +27272,66 @@ const createEmptyDocument = () => ({
     ],
 });
 
-const ContentfulRichTextEditor = ({ initialValue, onChange, onEmbedEntry, onEmbedAsset, className = '', readonly = false, placeholder = 'Start writing...', disabledFeatures = [], theme = 'contentful' }) => {
+const ContentfulRichTextEditor = ({ initialValue, onChange, onEmbedEntry, onEmbedAsset, className = '', readonly = false, placeholder = 'Start writing...', disabledFeatures = [], theme = 'contentful', availableHeadings = [1, 2, 3, 4, 5, 6], availableMarks = ['bold', 'italic', 'underline'] }) => {
+    // Determine which extensions to include based on available marks
+    const extensions = [
+        StarterKit.configure({
+            heading: {
+                levels: availableHeadings,
+            },
+            bold: availableMarks.includes('bold'),
+            italic: availableMarks.includes('italic'),
+            bulletList: {
+                HTMLAttributes: {
+                    class: 'contentful-bullet-list',
+                },
+            },
+            orderedList: {
+                HTMLAttributes: {
+                    class: 'contentful-ordered-list',
+                },
+            },
+            blockquote: {
+                HTMLAttributes: {
+                    class: 'contentful-blockquote',
+                },
+            },
+        }),
+        Link.configure({
+            openOnClick: false,
+            HTMLAttributes: {
+                class: 'contentful-link',
+                rel: 'noopener noreferrer',
+            },
+        }),
+        Table.configure({
+            resizable: true,
+            HTMLAttributes: {
+                class: 'contentful-table',
+            },
+        }),
+        TableRow.configure({
+            HTMLAttributes: {
+                class: 'contentful-table-row',
+            },
+        }),
+        TableHeader.configure({
+            HTMLAttributes: {
+                class: 'contentful-table-header',
+            },
+        }),
+        TableCell.configure({
+            HTMLAttributes: {
+                class: 'contentful-table-cell',
+            },
+        }),
+    ];
+    // Add underline extension only if it's in availableMarks
+    if (availableMarks.includes('underline')) {
+        extensions.push(Underline);
+    }
     const editor = useEditor({
-        extensions: [
-            StarterKit.configure({
-                heading: {
-                    levels: [1, 2, 3, 4, 5, 6],
-                },
-                bulletList: {
-                    HTMLAttributes: {
-                        class: 'contentful-bullet-list',
-                    },
-                },
-                orderedList: {
-                    HTMLAttributes: {
-                        class: 'contentful-ordered-list',
-                    },
-                },
-                blockquote: {
-                    HTMLAttributes: {
-                        class: 'contentful-blockquote',
-                    },
-                },
-            }),
-            Underline,
-            Link.configure({
-                openOnClick: false,
-                HTMLAttributes: {
-                    class: 'contentful-link',
-                    rel: 'noopener noreferrer',
-                },
-            }),
-            Table.configure({
-                resizable: true,
-                HTMLAttributes: {
-                    class: 'contentful-table',
-                },
-            }),
-            TableRow.configure({
-                HTMLAttributes: {
-                    class: 'contentful-table-row',
-                },
-            }),
-            TableHeader.configure({
-                HTMLAttributes: {
-                    class: 'contentful-table-header',
-                },
-            }),
-            TableCell.configure({
-                HTMLAttributes: {
-                    class: 'contentful-table-cell',
-                },
-            }),
-        ],
+        extensions,
         content: initialValue ? contentfulToTiptap(initialValue) : '',
         editable: !readonly,
         editorProps: {
@@ -27401,7 +27410,7 @@ const ContentfulRichTextEditor = ({ initialValue, onChange, onEmbedEntry, onEmbe
     if (!editor) {
         return (jsxRuntime.jsx("div", { className: `contentful-editor contentful-editor--loading ${className}`, children: jsxRuntime.jsx("div", { className: "contentful-editor__loading", children: "Loading editor..." }) }));
     }
-    return (jsxRuntime.jsxs("div", { className: `contentful-editor contentful-editor--${theme} ${className}`, children: [!readonly && (jsxRuntime.jsx(ContentfulToolbar, { editor: editor, onEmbedEntry: handleEmbedEntry, onEmbedAsset: handleEmbedAsset, disabledFeatures: disabledFeatures })), jsxRuntime.jsx("div", { className: "contentful-editor__content-wrapper", children: jsxRuntime.jsx(EditorContent, { editor: editor, className: "contentful-editor__content" }) })] }));
+    return (jsxRuntime.jsxs("div", { className: `contentful-editor contentful-editor--${theme} ${className}`, children: [!readonly && (jsxRuntime.jsx(ContentfulToolbar, { editor: editor, onEmbedEntry: handleEmbedEntry, onEmbedAsset: handleEmbedAsset, disabledFeatures: disabledFeatures, availableHeadings: availableHeadings, availableMarks: availableMarks })), jsxRuntime.jsx("div", { className: "contentful-editor__content-wrapper", children: jsxRuntime.jsx(EditorContent, { editor: editor, className: "contentful-editor__content" }) })] }));
 };
 
 exports.ContentfulRichTextEditor = ContentfulRichTextEditor;
