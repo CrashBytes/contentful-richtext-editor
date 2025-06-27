@@ -24,105 +24,126 @@ A modern, Tiptap-based rich text editor that's fully compatible with Contentful'
 
 ## Installation
 
-    npm install @crashbytes/contentful-richtext-editor
+```
+npm install @crashbytes/contentful-richtext-editor
+```
 
 ## Basic Usage
 
-    import React, { useState } from 'react';
-    import { ContentfulRichTextEditor } from '@crashbytes/contentful-richtext-editor';
-    import '@crashbytes/contentful-richtext-editor/dist/index.css';
-    import { Document } from '@contentful/rich-text-types';
+```javascript
+import React, { useState } from 'react';
+import { ContentfulRichTextEditor } from '@crashbytes/contentful-richtext-editor';
+import '@crashbytes/contentful-richtext-editor/dist/index.css';
+import { Document } from '@contentful/rich-text-types';
 
-    function App() {
-      const [content, setContent] = useState<Document>();
+function App() {
+  const [content, setContent] = useState();
 
-      const handleChange = (document: Document) => {
-        setContent(document);
-        console.log('Contentful document:', document);
-      };
+  const handleChange = (document) => {
+    setContent(document);
+    console.log('Contentful document:', document);
+  };
 
-      return (
-        <div>
-          <h1>My Rich Text Editor</h1>
-          <ContentfulRichTextEditor
-            placeholder="Start writing your content..."
-            onChange={handleChange}
-            initialValue={content}
-          />
-        </div>
-      );
-    }
+  return (
+    <div>
+      <h1>My Rich Text Editor</h1>
+      <ContentfulRichTextEditor
+        placeholder="Start writing your content..."
+        onChange={handleChange}
+        initialValue={content}
+      />
+    </div>
+  );
+}
 
-    export default App;
+export default App;
+```
 
 ## Advanced Usage
 
 ### With Contentful Entry/Asset Embedding
 
-    import { ContentfulRichTextEditor } from '@crashbytes/contentful-richtext-editor';
-    import '@crashbytes/contentful-richtext-editor/dist/index.css';
+```javascript
+import { ContentfulRichTextEditor } from '@crashbytes/contentful-richtext-editor';
+import '@crashbytes/contentful-richtext-editor/dist/index.css';
 
-    function ContentfulEditor() {
-      const handleEmbedEntry = async () => {
-        // Your logic to select a Contentful entry
-        const entry = await openEntrySelector();
-        return entry;
-      };
+function ContentfulEditor() {
+  const handleEmbedEntry = async () => {
+    // Your logic to select a Contentful entry
+    const entry = await openEntrySelector();
+    return entry;
+  };
 
-      const handleEmbedAsset = async () => {
-        // Your logic to select a Contentful asset
-        const asset = await openAssetSelector();
-        return asset;
-      };
+  const handleEmbedAsset = async () => {
+    // Your logic to select a Contentful asset
+    const asset = await openAssetSelector();
+    return asset;
+  };
 
-      return (
-        <ContentfulRichTextEditor
-          placeholder="Write your travel tip..."
-          onChange={(doc) => saveToContentful(doc)}
-          onEmbedEntry={handleEmbedEntry}
-          onEmbedAsset={handleEmbedAsset}
-          theme="contentful"
-        />
-      );
-    }
+  return (
+    <ContentfulRichTextEditor
+      placeholder="Write your travel tip..."
+      onChange={(doc) => saveToContentful(doc)}
+      onEmbedEntry={handleEmbedEntry}
+      onEmbedAsset={handleEmbedAsset}
+      theme="contentful"
+    />
+  );
+}
+```
 
 ### Customizing Features
 
-    <ContentfulRichTextEditor
-      placeholder="Simple editor..."
-      disabledFeatures={['table', 'embed', 'quote']}
-      theme="minimal"
-      readonly={false}
-      onChange={handleChange}
-    />
+```javascript
+<ContentfulRichTextEditor
+  placeholder="Simple editor..."
+  disabledFeatures={['table', 'embed', 'quote']}
+  theme="minimal"
+  readonly={false}
+  onChange={handleChange}
+/>
+```
+
+### Controlling Available Headings and Formatting
+
+```javascript
+<ContentfulRichTextEditor
+  placeholder="Limited editor..."
+  availableHeadings={[1, 2, 3]}  // Only H1, H2, H3
+  availableMarks={['bold', 'italic']}  // Only bold and italic, no underline
+  onChange={handleChange}
+/>
+```
 
 ### With Initial Content
 
-    import { createEmptyDocument } from '@crashbytes/contentful-richtext-editor';
+```javascript
+import { createEmptyDocument } from '@crashbytes/contentful-richtext-editor';
 
-    const initialContent = {
-      nodeType: 'document',
+const initialContent = {
+  nodeType: 'document',
+  data: {},
+  content: [
+    {
+      nodeType: 'paragraph',
       data: {},
       content: [
         {
-          nodeType: 'paragraph',
-          data: {},
-          content: [
-            {
-              nodeType: 'text',
-              value: 'Hello world!',
-              marks: [{ type: 'bold' }],
-              data: {}
-            }
-          ]
+          nodeType: 'text',
+          value: 'Hello world!',
+          marks: [{ type: 'bold' }],
+          data: {}
         }
       ]
-    };
+    }
+  ]
+};
 
-    <ContentfulRichTextEditor
-      initialValue={initialContent}
-      onChange={handleChange}
-    />
+<ContentfulRichTextEditor
+  initialValue={initialContent}
+  onChange={handleChange}
+/>
+```
 
 ## API Reference
 
@@ -139,6 +160,8 @@ A modern, Tiptap-based rich text editor that's fully compatible with Contentful'
 | `className` | `string` | `''` | Additional CSS classes |
 | `theme` | `'default' \| 'minimal' \| 'contentful'` | `'contentful'` | Visual theme |
 | `disabledFeatures` | `Array<string>` | `[]` | Features to disable |
+| `availableHeadings` | `Array<1\|2\|3\|4\|5\|6>` | `[1,2,3,4,5,6]` | Which heading levels to show |
+| `availableMarks` | `Array<'bold'\|'italic'\|'underline'>` | `['bold','italic','underline']` | Which text formatting options to show |
 
 ### Disabled Features
 
@@ -156,44 +179,50 @@ You can disable specific features by passing them in the `disabledFeatures` arra
 
 ### Utility Functions
 
-    import { 
-      contentfulToTiptap, 
-      tiptapToContentful,
-      validateContentfulDocument,
-      createEmptyDocument 
-    } from '@crashbytes/contentful-richtext-editor';
+```javascript
+import { 
+  contentfulToTiptap, 
+  tiptapToContentful,
+  validateContentfulDocument,
+  createEmptyDocument 
+} from '@crashbytes/contentful-richtext-editor';
 
-    // Convert between formats
-    const tiptapJson = contentfulToTiptap(contentfulDocument);
-    const contentfulDoc = tiptapToContentful(tiptapJson);
+// Convert between formats
+const tiptapJson = contentfulToTiptap(contentfulDocument);
+const contentfulDoc = tiptapToContentful(tiptapJson);
 
-    // Validation
-    const isValid = validateContentfulDocument(someDocument);
+// Validation
+const isValid = validateContentfulDocument(someDocument);
 
-    // Create empty document
-    const emptyDoc = createEmptyDocument();
+// Create empty document
+const emptyDoc = createEmptyDocument();
+```
 
 ## Styling
 
 The editor comes with default styles that match Contentful's design. Import the CSS:
 
-    import '@crashbytes/contentful-richtext-editor/dist/index.css';
+```javascript
+import '@crashbytes/contentful-richtext-editor/dist/index.css';
+```
 
 ### Custom Styling
 
 You can override the default styles by targeting the CSS classes:
 
-    .contentful-editor {
-      border: 2px solid #your-color;
-    }
+```css
+.contentful-editor {
+  border: 2px solid #your-color;
+}
 
-    .contentful-toolbar {
-      background: #your-background;
-    }
+.contentful-toolbar {
+  background: #your-background;
+}
 
-    .contentful-editor-content {
-      font-family: 'Your Font', sans-serif;
-    }
+.contentful-editor-content {
+  font-family: 'Your Font', sans-serif;
+}
+```
 
 ## Themes
 
@@ -208,36 +237,40 @@ Standard rich text editor appearance with serif fonts.
 
 ## Integration with Next.js
 
-    // pages/editor.tsx or app/editor/page.tsx
-    import dynamic from 'next/dynamic';
+```javascript
+// pages/editor.tsx or app/editor/page.tsx
+import dynamic from 'next/dynamic';
 
-    const ContentfulEditor = dynamic(
-      () => import('@crashbytes/contentful-richtext-editor').then(mod => mod.ContentfulRichTextEditor),
-      { ssr: false }
-    );
+const ContentfulEditor = dynamic(
+  () => import('@crashbytes/contentful-richtext-editor').then(mod => mod.ContentfulRichTextEditor),
+  { ssr: false }
+);
 
-    export default function EditorPage() {
-      return (
-        <div>
-          <ContentfulEditor
-            placeholder="Write something amazing..."
-            onChange={(doc) => console.log(doc)}
-          />
-        </div>
-      );
-    }
+export default function EditorPage() {
+  return (
+    <div>
+      <ContentfulEditor
+        placeholder="Write something amazing..."
+        onChange={(doc) => console.log(doc)}
+      />
+    </div>
+  );
+}
+```
 
 ## TypeScript Support
 
 This package is written in TypeScript and includes full type definitions. All Contentful rich text types are re-exported for convenience:
 
-    import type { 
-      Document, 
-      Block, 
-      Inline, 
-      Text,
-      ContentfulRichTextEditorProps 
-    } from '@crashbytes/contentful-richtext-editor';
+```javascript
+import type { 
+  Document, 
+  Block, 
+  Inline, 
+  Text,
+  ContentfulRichTextEditorProps 
+} from '@crashbytes/contentful-richtext-editor';
+```
 
 ## Browser Support
 

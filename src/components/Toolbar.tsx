@@ -6,18 +6,23 @@ interface ToolbarProps {
   onEmbedEntry?: () => void;
   onEmbedAsset?: () => void;
   disabledFeatures?: Array<string>;
+  availableHeadings?: Array<1 | 2 | 3 | 4 | 5 | 6>;
+  availableMarks?: Array<'bold' | 'italic' | 'underline'>;
 }
 
 export const ContentfulToolbar: React.FC<ToolbarProps> = ({
   editor,
   onEmbedEntry,
   onEmbedAsset,
-  disabledFeatures = []
+  disabledFeatures = [],
+  availableHeadings = [1, 2, 3, 4, 5, 6],
+  availableMarks = ['bold', 'italic', 'underline']
 }) => {
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
 
   const isDisabled = (feature: string) => disabledFeatures.includes(feature);
+  const isMarkAvailable = (mark: 'bold' | 'italic' | 'underline') => availableMarks.includes(mark);
 
   const handleHeadingChange = (level: number) => {
     if (level === 0) {
@@ -49,18 +54,20 @@ export const ContentfulToolbar: React.FC<ToolbarProps> = ({
   };
 
   const getActiveHeading = () => {
-    for (let i = 1; i <= 6; i++) {
-      if (editor.isActive('heading', { level: i })) {
-        return `Heading ${i}`;
+    for (const level of availableHeadings) {
+      if (editor.isActive('heading', { level })) {
+        return `Heading ${level}`;
       }
     }
     return 'Normal text';
   };
 
+  const hasHeadings = !isDisabled('headings') && availableHeadings.length > 0;
+
   return (
     <div className="contentful-toolbar">
       <div className="contentful-toolbar__group">
-        {!isDisabled('headings') && (
+        {hasHeadings && (
           <select
             className="contentful-toolbar__select"
             value={getActiveHeading()}
@@ -75,12 +82,11 @@ export const ContentfulToolbar: React.FC<ToolbarProps> = ({
             }}
           >
             <option value="Normal text">Normal text</option>
-            <option value="Heading 1">Heading 1</option>
-            <option value="Heading 2">Heading 2</option>
-            <option value="Heading 3">Heading 3</option>
-            <option value="Heading 4">Heading 4</option>
-            <option value="Heading 5">Heading 5</option>
-            <option value="Heading 6">Heading 6</option>
+            {availableHeadings.map(level => (
+              <option key={level} value={`Heading ${level}`}>
+                Heading {level}
+              </option>
+            ))}
           </select>
         )}
 
@@ -106,7 +112,7 @@ export const ContentfulToolbar: React.FC<ToolbarProps> = ({
       <div className="contentful-toolbar__separator" />
 
       <div className="contentful-toolbar__group">
-        {!isDisabled('bold') && (
+        {!isDisabled('bold') && isMarkAvailable('bold') && (
           <button
             className={`contentful-toolbar__button ${editor.isActive('bold') ? 'contentful-toolbar__button--active' : ''}`}
             onClick={() => editor.chain().focus().toggleBold().run()}
@@ -116,7 +122,7 @@ export const ContentfulToolbar: React.FC<ToolbarProps> = ({
           </button>
         )}
 
-        {!isDisabled('italic') && (
+        {!isDisabled('italic') && isMarkAvailable('italic') && (
           <button
             className={`contentful-toolbar__button ${editor.isActive('italic') ? 'contentful-toolbar__button--active' : ''}`}
             onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -126,7 +132,7 @@ export const ContentfulToolbar: React.FC<ToolbarProps> = ({
           </button>
         )}
 
-        {!isDisabled('underline') && (
+        {!isDisabled('underline') && isMarkAvailable('underline') && (
           <button
             className={`contentful-toolbar__button ${editor.isActive('underline') ? 'contentful-toolbar__button--active' : ''}`}
             onClick={() => editor.chain().focus().toggleUnderline().run()}

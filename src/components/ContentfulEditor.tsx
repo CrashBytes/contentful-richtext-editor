@@ -31,6 +31,10 @@ export interface ContentfulRichTextEditorProps {
   disabledFeatures?: Array<'bold' | 'italic' | 'underline' | 'link' | 'lists' | 'headings' | 'quote' | 'table' | 'embed'>;
   /** Custom styling options */
   theme?: 'default' | 'minimal' | 'contentful';
+  /** Which heading levels to make available (1-6) */
+  availableHeadings?: Array<1 | 2 | 3 | 4 | 5 | 6>;
+  /** Which text formatting marks to make available */
+  availableMarks?: Array<'bold' | 'italic' | 'underline'>;
 }
 
 export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> = ({
@@ -42,60 +46,71 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
   readonly = false,
   placeholder = 'Start writing...',
   disabledFeatures = [],
-  theme = 'contentful'
+  theme = 'contentful',
+  availableHeadings = [1, 2, 3, 4, 5, 6],
+  availableMarks = ['bold', 'italic', 'underline']
 }) => {
+  // Determine which extensions to include based on available marks
+  const extensions = [
+    StarterKit.configure({
+      heading: {
+        levels: availableHeadings,
+      },
+      bold: availableMarks.includes('bold'),
+      italic: availableMarks.includes('italic'),
+      bulletList: {
+        HTMLAttributes: {
+          class: 'contentful-bullet-list',
+        },
+      },
+      orderedList: {
+        HTMLAttributes: {
+          class: 'contentful-ordered-list',
+        },
+      },
+      blockquote: {
+        HTMLAttributes: {
+          class: 'contentful-blockquote',
+        },
+      },
+    }),
+    Link.configure({
+      openOnClick: false,
+      HTMLAttributes: {
+        class: 'contentful-link',
+        rel: 'noopener noreferrer',
+      },
+    }),
+    Table.configure({
+      resizable: true,
+      HTMLAttributes: {
+        class: 'contentful-table',
+      },
+    }),
+    TableRow.configure({
+      HTMLAttributes: {
+        class: 'contentful-table-row',
+      },
+    }),
+    TableHeader.configure({
+      HTMLAttributes: {
+        class: 'contentful-table-header',
+      },
+    }),
+    TableCell.configure({
+      HTMLAttributes: {
+        class: 'contentful-table-cell',
+      },
+    }),
+  ];
+
+  // Add underline extension only if it's in availableMarks
+  if (availableMarks.includes('underline')) {
+    extensions.push(Underline);
+  }
+
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3, 4, 5, 6],
-        },
-        bulletList: {
-          HTMLAttributes: {
-            class: 'contentful-bullet-list',
-          },
-        },
-        orderedList: {
-          HTMLAttributes: {
-            class: 'contentful-ordered-list',
-          },
-        },
-        blockquote: {
-          HTMLAttributes: {
-            class: 'contentful-blockquote',
-          },
-        },
-      }),
-      Underline,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'contentful-link',
-          rel: 'noopener noreferrer',
-        },
-      }),
-      Table.configure({
-        resizable: true,
-        HTMLAttributes: {
-          class: 'contentful-table',
-        },
-      }),
-      TableRow.configure({
-        HTMLAttributes: {
-          class: 'contentful-table-row',
-        },
-      }),
-      TableHeader.configure({
-        HTMLAttributes: {
-          class: 'contentful-table-header',
-        },
-      }),
-      TableCell.configure({
-        HTMLAttributes: {
-          class: 'contentful-table-cell',
-        },
-      }),
-    ],
+    extensions,
     content: initialValue ? contentfulToTiptap(initialValue) : '',
     editable: !readonly,
     editorProps: {
@@ -186,6 +201,8 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
           onEmbedEntry={handleEmbedEntry}
           onEmbedAsset={handleEmbedAsset}
           disabledFeatures={disabledFeatures}
+          availableHeadings={availableHeadings}
+          availableMarks={availableMarks}
         />
       )}
       <div className="contentful-editor__content-wrapper">
