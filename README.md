@@ -24,13 +24,13 @@ A modern, Tiptap-based rich text editor that's fully compatible with Contentful'
 
 ## Installation
 
-```
+```bash
 npm install @crashbytes/contentful-richtext-editor
 ```
 
 ## Basic Usage
 
-```javascript
+```jsx
 import React, { useState } from 'react';
 import { ContentfulRichTextEditor } from '@crashbytes/contentful-richtext-editor';
 import '@crashbytes/contentful-richtext-editor/dist/index.css';
@@ -63,7 +63,7 @@ export default App;
 
 ### With Contentful Entry/Asset Embedding
 
-```javascript
+```jsx
 import { ContentfulRichTextEditor } from '@crashbytes/contentful-richtext-editor';
 import '@crashbytes/contentful-richtext-editor/dist/index.css';
 
@@ -94,7 +94,7 @@ function ContentfulEditor() {
 
 ### Customizing Features
 
-```javascript
+```jsx
 <ContentfulRichTextEditor
   placeholder="Simple editor..."
   disabledFeatures={['table', 'embed', 'quote']}
@@ -106,7 +106,7 @@ function ContentfulEditor() {
 
 ### Controlling Available Headings and Formatting
 
-```javascript
+```jsx
 <ContentfulRichTextEditor
   placeholder="Limited editor..."
   availableHeadings={[1, 2, 3]}  // Only H1, H2, H3
@@ -117,7 +117,7 @@ function ContentfulEditor() {
 
 ### With Initial Content
 
-```javascript
+```jsx
 import { createEmptyDocument } from '@crashbytes/contentful-richtext-editor';
 
 const initialContent = {
@@ -179,7 +179,7 @@ You can disable specific features by passing them in the `disabledFeatures` arra
 
 ### Utility Functions
 
-```javascript
+```jsx
 import { 
   contentfulToTiptap, 
   tiptapToContentful,
@@ -202,7 +202,7 @@ const emptyDoc = createEmptyDocument();
 
 The editor comes with default styles that match Contentful's design. Import the CSS:
 
-```javascript
+```jsx
 import '@crashbytes/contentful-richtext-editor/dist/index.css';
 ```
 
@@ -237,7 +237,7 @@ Standard rich text editor appearance with serif fonts.
 
 ## Integration with Next.js
 
-```javascript
+```jsx
 // pages/editor.tsx or app/editor/page.tsx
 import dynamic from 'next/dynamic';
 
@@ -262,7 +262,7 @@ export default function EditorPage() {
 
 This package is written in TypeScript and includes full type definitions. All Contentful rich text types are re-exported for convenience:
 
-```javascript
+```tsx
 import type { 
   Document, 
   Block, 
