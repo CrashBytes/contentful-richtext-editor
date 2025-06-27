@@ -50,14 +50,17 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
   availableHeadings = [1, 2, 3, 4, 5, 6],
   availableMarks = ['bold', 'italic', 'underline']
 }) => {
-  // Determine which extensions to include based on available marks
-  const extensions = [
+  // Build extensions array based on available features
+  const extensions = [];
+
+  // Add StarterKit with configuration
+  extensions.push(
     StarterKit.configure({
       heading: {
         levels: availableHeadings,
       },
-      bold: availableMarks.includes('bold'),
-      italic: availableMarks.includes('italic'),
+      bold: availableMarks.includes('bold') ? {} : false,
+      italic: availableMarks.includes('italic') ? {} : false,
       bulletList: {
         HTMLAttributes: {
           class: 'contentful-bullet-list',
@@ -73,7 +76,16 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
           class: 'contentful-blockquote',
         },
       },
-    }),
+    })
+  );
+
+  // Add underline extension only if it's in availableMarks
+  if (availableMarks.includes('underline')) {
+    extensions.push(Underline);
+  }
+
+  // Add other extensions
+  extensions.push(
     Link.configure({
       openOnClick: false,
       HTMLAttributes: {
@@ -101,13 +113,8 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
       HTMLAttributes: {
         class: 'contentful-table-cell',
       },
-    }),
-  ];
-
-  // Add underline extension only if it's in availableMarks
-  if (availableMarks.includes('underline')) {
-    extensions.push(Underline);
-  }
+    })
+  );
 
   const editor = useEditor({
     extensions,

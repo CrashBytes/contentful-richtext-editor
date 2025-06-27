@@ -27273,63 +27273,60 @@ const createEmptyDocument = () => ({
 });
 
 const ContentfulRichTextEditor = ({ initialValue, onChange, onEmbedEntry, onEmbedAsset, className = '', readonly = false, placeholder = 'Start writing...', disabledFeatures = [], theme = 'contentful', availableHeadings = [1, 2, 3, 4, 5, 6], availableMarks = ['bold', 'italic', 'underline'] }) => {
-    // Determine which extensions to include based on available marks
-    const extensions = [
-        StarterKit.configure({
-            heading: {
-                levels: availableHeadings,
-            },
-            bold: availableMarks.includes('bold'),
-            italic: availableMarks.includes('italic'),
-            bulletList: {
-                HTMLAttributes: {
-                    class: 'contentful-bullet-list',
-                },
-            },
-            orderedList: {
-                HTMLAttributes: {
-                    class: 'contentful-ordered-list',
-                },
-            },
-            blockquote: {
-                HTMLAttributes: {
-                    class: 'contentful-blockquote',
-                },
-            },
-        }),
-        Link.configure({
-            openOnClick: false,
+    // Build extensions array based on available features
+    const extensions = [];
+    // Add StarterKit with configuration
+    extensions.push(StarterKit.configure({
+        heading: {
+            levels: availableHeadings,
+        },
+        bold: availableMarks.includes('bold') ? {} : false,
+        italic: availableMarks.includes('italic') ? {} : false,
+        bulletList: {
             HTMLAttributes: {
-                class: 'contentful-link',
-                rel: 'noopener noreferrer',
+                class: 'contentful-bullet-list',
             },
-        }),
-        Table.configure({
-            resizable: true,
+        },
+        orderedList: {
             HTMLAttributes: {
-                class: 'contentful-table',
+                class: 'contentful-ordered-list',
             },
-        }),
-        TableRow.configure({
+        },
+        blockquote: {
             HTMLAttributes: {
-                class: 'contentful-table-row',
+                class: 'contentful-blockquote',
             },
-        }),
-        TableHeader.configure({
-            HTMLAttributes: {
-                class: 'contentful-table-header',
-            },
-        }),
-        TableCell.configure({
-            HTMLAttributes: {
-                class: 'contentful-table-cell',
-            },
-        }),
-    ];
+        },
+    }));
     // Add underline extension only if it's in availableMarks
     if (availableMarks.includes('underline')) {
         extensions.push(Underline);
     }
+    // Add other extensions
+    extensions.push(Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+            class: 'contentful-link',
+            rel: 'noopener noreferrer',
+        },
+    }), Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+            class: 'contentful-table',
+        },
+    }), TableRow.configure({
+        HTMLAttributes: {
+            class: 'contentful-table-row',
+        },
+    }), TableHeader.configure({
+        HTMLAttributes: {
+            class: 'contentful-table-header',
+        },
+    }), TableCell.configure({
+        HTMLAttributes: {
+            class: 'contentful-table-cell',
+        },
+    }));
     const editor = useEditor({
         extensions,
         content: initialValue ? contentfulToTiptap(initialValue) : '',
