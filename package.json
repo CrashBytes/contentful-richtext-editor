@@ -30,7 +30,14 @@
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "release": "standard-version",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "release:patch": "standard-version --release-as patch",
+    "release:prerelease": "standard-version --prerelease",
+    "release:alpha": "standard-version --prerelease alpha",
+    "release:beta": "standard-version --prerelease beta"
   },
   "peerDependencies": {
     "react": ">=16.8.0",
@@ -63,6 +70,7 @@
     "@storybook/testing-library": "^0.2.2",
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-postcss": "^4.0.2",
+    "standard-version": "^9.5.0",
     "storybook": "^7.6.20"
   }
 }
