@@ -66,8 +66,8 @@ export const EmbeddedEntry = Node.create({
     return {
       entryId: {
         default: null,
-        parseHTML: element => element.getAttribute('data-entry-id'),
-        renderHTML: attributes => {
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-entry-id'),
+        renderHTML: (attributes: any) => {
           if (!attributes.entryId) {
             return {};
           }
@@ -78,8 +78,8 @@ export const EmbeddedEntry = Node.create({
       },
       contentType: {
         default: null,
-        parseHTML: element => element.getAttribute('data-content-type'),
-        renderHTML: attributes => {
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-content-type'),
+        renderHTML: (attributes: any) => {
           if (!attributes.contentType) {
             return {};
           }
@@ -111,17 +111,6 @@ export const EmbeddedEntry = Node.create({
   addNodeView() {
     return ReactNodeViewRenderer(EmbeddedEntryComponent);
   },
-
-  addCommands() {
-    return {
-      insertEmbeddedEntry: (attributes: { entryId: string; contentType?: string; title?: string }) => ({ commands }) => {
-        return commands.insertContent({
-          type: this.name,
-          attrs: attributes,
-        });
-      },
-    };
-  },
 });
 
 export const InlineEmbeddedEntry = Node.create({
@@ -134,8 +123,8 @@ export const InlineEmbeddedEntry = Node.create({
     return {
       entryId: {
         default: null,
-        parseHTML: element => element.getAttribute('data-entry-id'),
-        renderHTML: attributes => {
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-entry-id'),
+        renderHTML: (attributes: any) => {
           if (!attributes.entryId) {
             return {};
           }
@@ -146,8 +135,8 @@ export const InlineEmbeddedEntry = Node.create({
       },
       contentType: {
         default: null,
-        parseHTML: element => element.getAttribute('data-content-type'),
-        renderHTML: attributes => {
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-content-type'),
+        renderHTML: (attributes: any) => {
           if (!attributes.contentType) {
             return {};
           }
@@ -179,17 +168,6 @@ export const InlineEmbeddedEntry = Node.create({
   addNodeView() {
     return ReactNodeViewRenderer(InlineEmbeddedEntryComponent);
   },
-
-  addCommands() {
-    return {
-      insertInlineEmbeddedEntry: (attributes: { entryId: string; contentType?: string; title?: string }) => ({ commands }) => {
-        return commands.insertContent({
-          type: this.name,
-          attrs: attributes,
-        });
-      },
-    };
-  },
 });
 
 export const EmbeddedAsset = Node.create({
@@ -201,8 +179,8 @@ export const EmbeddedAsset = Node.create({
     return {
       assetId: {
         default: null,
-        parseHTML: element => element.getAttribute('data-asset-id'),
-        renderHTML: attributes => {
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-asset-id'),
+        renderHTML: (attributes: any) => {
           if (!attributes.assetId) {
             return {};
           }
@@ -242,17 +220,6 @@ export const EmbeddedAsset = Node.create({
 
   addNodeView() {
     return ReactNodeViewRenderer(EmbeddedAssetComponent);
-  },
-
-  addCommands() {
-    return {
-      insertEmbeddedAsset: (attributes: { assetId: string; title?: string; url?: string; mimeType?: string }) => ({ commands }) => {
-        return commands.insertContent({
-          type: this.name,
-          attrs: attributes,
-        });
-      },
-    };
   },
 });
 
