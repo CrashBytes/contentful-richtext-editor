@@ -25,4 +25,24 @@ export declare const validateContentfulDocument: (document: any) => document is 
  * Creates an empty Contentful document
  */
 export declare const createEmptyDocument: () => Document;
+/**
+ * Sanitizes a Contentful document by removing invalid nodes/marks based on configuration
+ */
+export declare const sanitizeContentfulDocument: (document: Document, allowedNodeTypes: string[], allowedMarks: string[]) => Document;
+/**
+ * Extracts plain text from a Contentful document
+ */
+export declare const extractPlainText: (document: Document) => string;
+/**
+ * Counts words in a Contentful document
+ */
+export declare const countWords: (document: Document) => number;
+/**
+ * Finds all embedded entries/assets in a document
+ */
+export declare const findEmbeddedContent: (document: Document) => {
+    entries: string[];
+    assets: string[];
+    inlineEntries: string[];
+};
 export {};
