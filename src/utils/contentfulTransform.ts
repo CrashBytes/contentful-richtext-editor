@@ -144,6 +144,14 @@ export const contentfulToTiptap = (document: Document): TiptapNode => {
           ],
         };
 
+      case INLINES.EMBEDDED_ENTRY:
+        // Inline embedded entry
+        return {
+          type: 'text',
+          text: `[Inline Entry: ${node.data.target?.sys?.id || 'Unknown'}]`,
+          marks: [{ type: 'bold' }],
+        };
+
       case BLOCKS.EMBEDDED_ENTRY:
         return {
           type: 'paragraph',
@@ -341,6 +349,28 @@ export const tiptapToContentful = (tiptapDoc: any): Document => {
           };
         }
 
+        // Check if this is an inline entry (by looking for specific patterns)
+        const isInlineEntry = node.text && node.text.startsWith('[Inline Entry:');
+        if (isInlineEntry && node.marks?.some((mark: any) => mark.type === 'bold')) {
+          // Extract entry ID from the text
+          const match = node.text.match(/\[Inline Entry:\s*([^\]]+)\]/);
+          const entryId = match ? match[1].trim() : 'Unknown';
+          
+          return {
+            nodeType: INLINES.EMBEDDED_ENTRY,
+            data: {
+              target: {
+                sys: {
+                  id: entryId,
+                  type: 'Link',
+                  linkType: 'Entry',
+                },
+              },
+            },
+            content: [],
+          };
+        }
+
         return {
           nodeType: 'text',
           value: node.text || '',
@@ -394,3 +424,118 @@ export const createEmptyDocument = (): Document => ({
     },
   ],
 });
+
+/**
+ * Sanitizes a Contentful document by removing invalid nodes/marks based on configuration
+ */
+export const sanitizeContentfulDocument = (
+  document: Document,
+  allowedNodeTypes: string[],
+  allowedMarks: string[]
+): Document => {
+  const sanitizeNode = (node: Block | Inline | Text): Block | Inline | Text | null => {
+    // Check if node type is allowed
+    if (!allowedNodeTypes.includes(node.nodeType)) {
+      // Convert to paragraph if it's a block that's not allowed
+      if (node.nodeType.startsWith('heading-') || 
+          node.nodeType === BLOCKS.QUOTE || 
+          node.nodeType === BLOCKS.UL_LIST ||
+          node.nodeType === BLOCKS.OL_LIST) {
+        return {
+          nodeType: BLOCKS.PARAGRAPH,
+          data: {},
+          content: (node as Block).content?.map(child => sanitizeNode(child)).filter(Boolean) as (Inline | Text)[],
+        };
+      }
+      return null;
+    }
+
+    if (node.nodeType === 'text') {
+      const textNode = node as Text;
+      const sanitizedMarks = textNode.marks?.filter(mark => allowedMarks.includes(mark.type)) || [];
+      return {
+        ...textNode,
+        marks: sanitizedMarks,
+      };
+    }
+
+    if ('content' in node && node.content) {
+      const sanitizedContent = node.content.map(child => sanitizeNode(child)).filter(Boolean);
+      return {
+        ...node,
+        content: sanitizedContent,
+      } as Block | Inline;
+    }
+
+    return node;
+  };
+
+  const sanitized = sanitizeNode(document);
+  return sanitized as Document;
+};
+
+/**
+ * Extracts plain text from a Contentful document
+ */
+export const extractPlainText = (document: Document): string => {
+  const extractFromNode = (node: Block | Inline | Text): string => {
+    if (node.nodeType === 'text') {
+      return (node as Text).value;
+    }
+
+    if ('content' in node && node.content) {
+      return node.content.map(child => extractFromNode(child)).join('');
+    }
+
+    return '';
+  };
+
+  return extractFromNode(document);
+};
+
+/**
+ * Counts words in a Contentful document
+ */
+export const countWords = (document: Document): number => {
+  const plainText = extractPlainText(document);
+  const words = plainText.trim().split(/\s+/).filter(word => word.length > 0);
+  return words.length;
+};
+
+/**
+ * Finds all embedded entries/assets in a document
+ */
+export const findEmbeddedContent = (document: Document): {
+  entries: string[];
+  assets: string[];
+  inlineEntries: string[];
+} => {
+  const entries: string[] = [];
+  const assets: string[] = [];
+  const inlineEntries: string[] = [];
+
+  const searchNode = (node: Block | Inline | Text): void => {
+    if (node.nodeType === BLOCKS.EMBEDDED_ENTRY) {
+      const entryId = node.data.target?.sys?.id;
+      if (entryId) entries.push(entryId);
+    } else if (node.nodeType === BLOCKS.EMBEDDED_ASSET) {
+      const assetId = node.data.target?.sys?.id;
+      if (assetId) assets.push(assetId);
+    } else if (node.nodeType === INLINES.EMBEDDED_ENTRY) {
+      const entryId = node.data.target?.sys?.id;
+      if (entryId) inlineEntries.push(entryId);
+    }
+
+    if ('content' in node && node.content) {
+      node.content.forEach(child => searchNode(child));
+    }
+  };
+
+  searchNode(document);
+
+  return {
+    entries: [...new Set(entries)], // Remove duplicates
+    assets: [...new Set(assets)],
+    inlineEntries: [...new Set(inlineEntries)],
+  };
+};

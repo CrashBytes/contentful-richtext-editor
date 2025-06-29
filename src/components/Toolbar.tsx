@@ -5,18 +5,22 @@ interface ToolbarProps {
   editor: Editor;
   onEmbedEntry?: () => void;
   onEmbedAsset?: () => void;
+  onEmbedInlineEntry?: () => void;
   disabledFeatures?: Array<string>;
   availableHeadings?: Array<1 | 2 | 3 | 4 | 5 | 6>;
   availableMarks?: Array<'bold' | 'italic' | 'underline'>;
+  allowHyperlinks?: boolean;
 }
 
 export const ContentfulToolbar: React.FC<ToolbarProps> = ({
   editor,
   onEmbedEntry,
   onEmbedAsset,
+  onEmbedInlineEntry,
   disabledFeatures = [],
   availableHeadings = [1, 2, 3, 4, 5, 6],
-  availableMarks = ['bold', 'italic', 'underline']
+  availableMarks = ['bold', 'italic', 'underline'],
+  allowHyperlinks = true
 }) => {
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
@@ -49,6 +53,11 @@ export const ContentfulToolbar: React.FC<ToolbarProps> = ({
     setLinkUrl('');
   };
 
+  const handleLinkCancel = () => {
+    setShowLinkInput(false);
+    setLinkUrl('');
+  };
+
   const insertTable = () => {
     editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
   };
@@ -63,9 +72,12 @@ export const ContentfulToolbar: React.FC<ToolbarProps> = ({
   };
 
   const hasHeadings = !isDisabled('headings') && availableHeadings.length > 0;
+  const hasAnyEmbedOptions = onEmbedEntry || onEmbedAsset || onEmbedInlineEntry;
+  const hasAnyTextFormatting = availableMarks.some(mark => !isDisabled(mark) && isMarkAvailable(mark));
 
   return (
     <div className="contentful-toolbar">
+      {/* Text Style and Undo/Redo */}
       <div className="contentful-toolbar__group">
         {hasHeadings && (
           <select
@@ -109,161 +121,184 @@ export const ContentfulToolbar: React.FC<ToolbarProps> = ({
         </button>
       </div>
 
-      <div className="contentful-toolbar__separator" />
-
-      <div className="contentful-toolbar__group">
-        {!isDisabled('bold') && isMarkAvailable('bold') && (
-          <button
-            className={`contentful-toolbar__button ${editor.isActive('bold') ? 'contentful-toolbar__button--active' : ''}`}
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            title="Bold"
-          >
-            <strong>B</strong>
-          </button>
-        )}
-
-        {!isDisabled('italic') && isMarkAvailable('italic') && (
-          <button
-            className={`contentful-toolbar__button ${editor.isActive('italic') ? 'contentful-toolbar__button--active' : ''}`}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            title="Italic"
-          >
-            <em>I</em>
-          </button>
-        )}
-
-        {!isDisabled('underline') && isMarkAvailable('underline') && (
-          <button
-            className={`contentful-toolbar__button ${editor.isActive('underline') ? 'contentful-toolbar__button--active' : ''}`}
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-            title="Underline"
-          >
-            <u>U</u>
-          </button>
-        )}
-
-        <button
-          className="contentful-toolbar__button"
-          title="More formatting options"
-        >
-          ⋯
-        </button>
-
-        {!isDisabled('link') && (
-          <>
-            <button
-              className={`contentful-toolbar__button ${editor.isActive('link') ? 'contentful-toolbar__button--active' : ''}`}
-              onClick={handleLinkToggle}
-              title="Link"
-            >
-              🔗
-            </button>
-            {showLinkInput && (
-              <div className="contentful-toolbar__link-input">
-                <input
-                  type="url"
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.target.value)}
-                  placeholder="Enter URL"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleLinkSubmit();
-                    }
-                    if (e.key === 'Escape') {
-                      setShowLinkInput(false);
-                    }
-                  }}
-                  autoFocus
-                />
-                <button onClick={handleLinkSubmit}>✓</button>
-                <button onClick={() => setShowLinkInput(false)}>✗</button>
-              </div>
+      {/* Text Formatting */}
+      {(hasAnyTextFormatting || allowHyperlinks) && (
+        <>
+          <div className="contentful-toolbar__separator" />
+          
+          <div className="contentful-toolbar__group">
+            {!isDisabled('bold') && isMarkAvailable('bold') && (
+              <button
+                className={`contentful-toolbar__button ${editor.isActive('bold') ? 'contentful-toolbar__button--active' : ''}`}
+                onClick={() => editor.chain().focus().toggleBold().run()}
+                title="Bold"
+              >
+                <strong>B</strong>
+              </button>
             )}
-          </>
-        )}
-      </div>
 
-      <div className="contentful-toolbar__separator" />
+            {!isDisabled('italic') && isMarkAvailable('italic') && (
+              <button
+                className={`contentful-toolbar__button ${editor.isActive('italic') ? 'contentful-toolbar__button--active' : ''}`}
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+                title="Italic"
+              >
+                <em>I</em>
+              </button>
+            )}
 
-      <div className="contentful-toolbar__group">
-        {!isDisabled('lists') && (
-          <>
+            {!isDisabled('underline') && isMarkAvailable('underline') && (
+              <button
+                className={`contentful-toolbar__button ${editor.isActive('underline') ? 'contentful-toolbar__button--active' : ''}`}
+                onClick={() => editor.chain().focus().toggleUnderline().run()}
+                title="Underline"
+              >
+                <u>U</u>
+              </button>
+            )}
+
             <button
-              className={`contentful-toolbar__button ${editor.isActive('bulletList') ? 'contentful-toolbar__button--active' : ''}`}
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
-              title="Bullet List"
+              className="contentful-toolbar__button"
+              title="More formatting options"
             >
-              • ≡
+              ⋯
             </button>
+
+            {!isDisabled('link') && allowHyperlinks && (
+              <>
+                <button
+                  className={`contentful-toolbar__button ${editor.isActive('link') ? 'contentful-toolbar__button--active' : ''}`}
+                  onClick={handleLinkToggle}
+                  title="Link"
+                >
+                  🔗
+                </button>
+                {showLinkInput && (
+                  <div className="contentful-toolbar__link-input">
+                    <input
+                      type="url"
+                      value={linkUrl}
+                      onChange={(e) => setLinkUrl(e.target.value)}
+                      placeholder="Enter URL"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleLinkSubmit();
+                        }
+                        if (e.key === 'Escape') {
+                          e.preventDefault();
+                          handleLinkCancel();
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <button onClick={handleLinkSubmit} title="Apply link">✓</button>
+                    <button onClick={handleLinkCancel} title="Cancel">✗</button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Lists, Quotes, Tables */}
+      {(!isDisabled('lists') || !isDisabled('quote') || !isDisabled('table')) && (
+        <>
+          <div className="contentful-toolbar__separator" />
+
+          <div className="contentful-toolbar__group">
+            {!isDisabled('lists') && (
+              <>
+                <button
+                  className={`contentful-toolbar__button ${editor.isActive('bulletList') ? 'contentful-toolbar__button--active' : ''}`}
+                  onClick={() => editor.chain().focus().toggleBulletList().run()}
+                  title="Bullet List"
+                >
+                  • ≡
+                </button>
+
+                <button
+                  className={`contentful-toolbar__button ${editor.isActive('orderedList') ? 'contentful-toolbar__button--active' : ''}`}
+                  onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                  title="Numbered List"
+                >
+                  1. ≡
+                </button>
+              </>
+            )}
+
+            {!isDisabled('quote') && (
+              <button
+                className={`contentful-toolbar__button ${editor.isActive('blockquote') ? 'contentful-toolbar__button--active' : ''}`}
+                onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                title="Quote"
+              >
+                "
+              </button>
+            )}
 
             <button
-              className={`contentful-toolbar__button ${editor.isActive('orderedList') ? 'contentful-toolbar__button--active' : ''}`}
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
-              title="Numbered List"
+              className="contentful-toolbar__button"
+              onClick={() => editor.chain().focus().setHorizontalRule().run()}
+              title="Horizontal Rule"
             >
-              1. ≡
+              —
             </button>
-          </>
-        )}
 
-        {!isDisabled('quote') && (
-          <button
-            className={`contentful-toolbar__button ${editor.isActive('blockquote') ? 'contentful-toolbar__button--active' : ''}`}
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            title="Quote"
-          >
-            "
-          </button>
-        )}
+            {!isDisabled('table') && (
+              <button
+                className="contentful-toolbar__button"
+                onClick={insertTable}
+                title="Insert Table"
+              >
+                ⊞
+              </button>
+            )}
+          </div>
+        </>
+      )}
 
-        <button
-          className="contentful-toolbar__button"
-          onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          title="Horizontal Rule"
-        >
-          —
-        </button>
+      {/* Embed Options */}
+      {hasAnyEmbedOptions && !isDisabled('embed') && (
+        <>
+          <div className="contentful-toolbar__separator" />
 
-        {!isDisabled('table') && (
-          <button
-            className="contentful-toolbar__button"
-            onClick={insertTable}
-            title="Insert Table"
-          >
-            ⊞
-          </button>
-        )}
-      </div>
-
-      <div className="contentful-toolbar__separator" />
-
-      <div className="contentful-toolbar__group contentful-toolbar__group--right">
-        {!isDisabled('embed') && (
-          <div className="contentful-toolbar__embed-dropdown">
-            <button className="contentful-toolbar__embed-button">
-              + Embed ▼
-            </button>
-            <div className="contentful-toolbar__embed-menu">
-              {onEmbedEntry && (
-                <button
-                  className="contentful-toolbar__embed-option"
-                  onClick={onEmbedEntry}
-                >
-                  Entry
-                </button>
-              )}
-              {onEmbedAsset && (
-                <button
-                  className="contentful-toolbar__embed-option"
-                  onClick={onEmbedAsset}
-                >
-                  Media
-                </button>
-              )}
+          <div className="contentful-toolbar__group contentful-toolbar__group--right">
+            <div className="contentful-toolbar__embed-dropdown">
+              <button className="contentful-toolbar__embed-button">
+                + Embed ▼
+              </button>
+              <div className="contentful-toolbar__embed-menu">
+                {onEmbedEntry && (
+                  <button
+                    className="contentful-toolbar__embed-option"
+                    onClick={onEmbedEntry}
+                  >
+                    📄 Entry
+                  </button>
+                )}
+                {onEmbedInlineEntry && (
+                  <button
+                    className="contentful-toolbar__embed-option"
+                    onClick={onEmbedInlineEntry}
+                  >
+                    📝 Inline Entry
+                  </button>
+                )}
+                {onEmbedAsset && (
+                  <button
+                    className="contentful-toolbar__embed-option"
+                    onClick={onEmbedAsset}
+                  >
+                    🖼️ Media
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 };

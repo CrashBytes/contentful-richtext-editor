@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -10,6 +10,8 @@ import Underline from '@tiptap/extension-underline';
 import { Document } from '@contentful/rich-text-types';
 import { ContentfulToolbar } from './Toolbar';
 import { contentfulToTiptap, tiptapToContentful } from '../utils/contentfulTransform';
+import { parseContentfulFieldConfig } from '../utils/configParser';
+import type { ContentfulFieldConfiguration } from '../utils/configParser';
 import '../styles/editor.css';
 
 export interface ContentfulRichTextEditorProps {
@@ -21,19 +23,23 @@ export interface ContentfulRichTextEditorProps {
   onEmbedEntry?: () => Promise<any> | void;
   /** Callback for handling embedded assets */
   onEmbedAsset?: () => Promise<any> | void;
+  /** Callback for handling inline entries */
+  onEmbedInlineEntry?: () => Promise<any> | void;
   /** Custom CSS classes */
   className?: string;
   /** Whether the editor is read-only */
   readonly?: boolean;
   /** Placeholder text */
   placeholder?: string;
-  /** Disable specific toolbar features */
+  /** Contentful field configuration - takes precedence over manual settings */
+  fieldConfiguration?: ContentfulFieldConfiguration;
+  /** Manual disable features (fallback if no fieldConfiguration provided) */
   disabledFeatures?: Array<'bold' | 'italic' | 'underline' | 'link' | 'lists' | 'headings' | 'quote' | 'table' | 'embed'>;
   /** Custom styling options */
   theme?: 'default' | 'minimal' | 'contentful';
-  /** Which heading levels to make available (1-6) */
+  /** Manual heading levels (fallback if no fieldConfiguration provided) */
   availableHeadings?: Array<1 | 2 | 3 | 4 | 5 | 6>;
-  /** Which text formatting marks to make available */
+  /** Manual text marks (fallback if no fieldConfiguration provided) */
   availableMarks?: Array<'bold' | 'italic' | 'underline'>;
 }
 
@@ -42,78 +48,120 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
   onChange,
   onEmbedEntry,
   onEmbedAsset,
+  onEmbedInlineEntry,
   className = '',
   readonly = false,
   placeholder = 'Start writing...',
+  fieldConfiguration,
   disabledFeatures = [],
   theme = 'contentful',
   availableHeadings = [1, 2, 3, 4, 5, 6],
   availableMarks = ['bold', 'italic', 'underline']
 }) => {
-  // Build extensions array based on available features
-  const extensions = [];
+  // Parse Contentful field configuration to determine available features
+  const editorConfig = useMemo(() => {
+    if (fieldConfiguration) {
+      return parseContentfulFieldConfig(fieldConfiguration);
+    }
+    
+    // Fallback to manual configuration
+    const disabled: string[] = [];
+    if (!availableMarks.includes('bold')) disabled.push('bold');
+    if (!availableMarks.includes('italic')) disabled.push('italic');
+    if (!availableMarks.includes('underline')) disabled.push('underline');
+    disabled.push(...disabledFeatures);
 
-  // Add StarterKit with configuration
-  extensions.push(
-    StarterKit.configure({
-      heading: {
-        levels: availableHeadings,
-      },
-      bold: availableMarks.includes('bold') ? {} : false,
-      italic: availableMarks.includes('italic') ? {} : false,
-      bulletList: {
-        HTMLAttributes: {
-          class: 'contentful-bullet-list',
-        },
-      },
-      orderedList: {
-        HTMLAttributes: {
-          class: 'contentful-ordered-list',
-        },
-      },
-      blockquote: {
-        HTMLAttributes: {
-          class: 'contentful-blockquote',
-        },
-      },
-    })
-  );
+    return {
+      availableHeadings,
+      availableMarks,
+      disabledFeatures: disabled,
+      allowHyperlinks: !disabledFeatures.includes('link'),
+      allowEmbeddedEntries: !disabledFeatures.includes('embed'),
+      allowEmbeddedAssets: !disabledFeatures.includes('embed'),
+      allowInlineEntries: !disabledFeatures.includes('embed'),
+      allowTables: !disabledFeatures.includes('table'),
+      allowQuotes: !disabledFeatures.includes('quote'),
+      allowLists: !disabledFeatures.includes('lists'),
+    };
+  }, [fieldConfiguration, disabledFeatures, availableHeadings, availableMarks]);
 
-  // Always add underline extension to schema to support content with underline marks
-  // The availableMarks prop only controls toolbar visibility, not schema support
-  extensions.push(Underline);
+  // Build extensions array based on configuration
+  const extensions = useMemo(() => {
+    const exts = [];
 
-  // Add other extensions
-  extensions.push(
-    Link.configure({
-      openOnClick: false,
-      HTMLAttributes: {
-        class: 'contentful-link',
-        rel: 'noopener noreferrer',
-      },
-    }),
-    Table.configure({
-      resizable: true,
-      HTMLAttributes: {
-        class: 'contentful-table',
-      },
-    }),
-    TableRow.configure({
-      HTMLAttributes: {
-        class: 'contentful-table-row',
-      },
-    }),
-    TableHeader.configure({
-      HTMLAttributes: {
-        class: 'contentful-table-header',
-      },
-    }),
-    TableCell.configure({
-      HTMLAttributes: {
-        class: 'contentful-table-cell',
-      },
-    })
-  );
+    // Add StarterKit with configuration
+    exts.push(
+      StarterKit.configure({
+        heading: editorConfig.availableHeadings.length > 0 ? {
+          levels: editorConfig.availableHeadings,
+        } : false,
+        bold: editorConfig.availableMarks.includes('bold') ? {} : false,
+        italic: editorConfig.availableMarks.includes('italic') ? {} : false,
+        bulletList: editorConfig.allowLists ? {
+          HTMLAttributes: {
+            class: 'contentful-bullet-list',
+          },
+        } : false,
+        orderedList: editorConfig.allowLists ? {
+          HTMLAttributes: {
+            class: 'contentful-ordered-list',
+          },
+        } : false,
+        blockquote: editorConfig.allowQuotes ? {
+          HTMLAttributes: {
+            class: 'contentful-blockquote',
+          },
+        } : false,
+      })
+    );
+
+    // Add underline extension only if it's in availableMarks
+    if (editorConfig.availableMarks.includes('underline')) {
+      exts.push(Underline);
+    }
+
+    // Add link extension only if hyperlinks are allowed
+    if (editorConfig.allowHyperlinks) {
+      exts.push(
+        Link.configure({
+          openOnClick: false,
+          HTMLAttributes: {
+            class: 'contentful-link',
+            rel: 'noopener noreferrer',
+          },
+        })
+      );
+    }
+
+    // Add table extensions only if tables are allowed
+    if (editorConfig.allowTables) {
+      exts.push(
+        Table.configure({
+          resizable: true,
+          HTMLAttributes: {
+            class: 'contentful-table',
+          },
+        }),
+        TableRow.configure({
+          HTMLAttributes: {
+            class: 'contentful-table-row',
+          },
+        }),
+        TableHeader.configure({
+          HTMLAttributes: {
+            class: 'contentful-table-header',
+          },
+        }),
+        TableCell.configure({
+          HTMLAttributes: {
+            class: 'contentful-table-cell',
+          },
+        })
+      );
+    }
+
+    return exts;
+  }, [editorConfig]);
 
   const editor = useEditor({
     extensions,
@@ -146,17 +194,16 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
   }, [editor, initialValue]);
 
   const handleEmbedEntry = useCallback(async () => {
-    if (onEmbedEntry && editor) {
+    if (onEmbedEntry && editor && editorConfig.allowEmbeddedEntries) {
       try {
         const entry = await onEmbedEntry();
         if (entry) {
-          // Insert embedded entry at cursor position
           editor.chain().focus().insertContent({
             type: 'paragraph',
             content: [
               {
                 type: 'text',
-                text: `[Embedded Entry: ${entry.sys?.id || 'Unknown'}]`,
+                text: `[Embedded Entry: ${entry.sys?.id || entry.fields?.title || 'Unknown'}]`,
                 marks: [{ type: 'bold' }],
               },
             ],
@@ -166,20 +213,19 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
         console.error('Error embedding entry:', error);
       }
     }
-  }, [onEmbedEntry, editor]);
+  }, [onEmbedEntry, editor, editorConfig.allowEmbeddedEntries]);
 
   const handleEmbedAsset = useCallback(async () => {
-    if (onEmbedAsset && editor) {
+    if (onEmbedAsset && editor && editorConfig.allowEmbeddedAssets) {
       try {
         const asset = await onEmbedAsset();
         if (asset) {
-          // Insert embedded asset at cursor position
           editor.chain().focus().insertContent({
             type: 'paragraph',
             content: [
               {
                 type: 'text',
-                text: `[Embedded Asset: ${asset.sys?.id || 'Unknown'}]`,
+                text: `[Embedded Asset: ${asset.sys?.id || asset.fields?.title || 'Unknown'}]`,
                 marks: [{ type: 'bold' }],
               },
             ],
@@ -189,7 +235,24 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
         console.error('Error embedding asset:', error);
       }
     }
-  }, [onEmbedAsset, editor]);
+  }, [onEmbedAsset, editor, editorConfig.allowEmbeddedAssets]);
+
+  const handleEmbedInlineEntry = useCallback(async () => {
+    if (onEmbedInlineEntry && editor && editorConfig.allowInlineEntries) {
+      try {
+        const entry = await onEmbedInlineEntry();
+        if (entry) {
+          editor.chain().focus().insertContent({
+            type: 'text',
+            text: `[Inline Entry: ${entry.sys?.id || entry.fields?.title || 'Unknown'}]`,
+            marks: [{ type: 'bold' }],
+          }).run();
+        }
+      } catch (error) {
+        console.error('Error embedding inline entry:', error);
+      }
+    }
+  }, [onEmbedInlineEntry, editor, editorConfig.allowInlineEntries]);
 
   if (!editor) {
     return (
@@ -204,11 +267,13 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
       {!readonly && (
         <ContentfulToolbar
           editor={editor}
-          onEmbedEntry={handleEmbedEntry}
-          onEmbedAsset={handleEmbedAsset}
-          disabledFeatures={disabledFeatures}
-          availableHeadings={availableHeadings}
-          availableMarks={availableMarks}
+          onEmbedEntry={editorConfig.allowEmbeddedEntries ? handleEmbedEntry : undefined}
+          onEmbedAsset={editorConfig.allowEmbeddedAssets ? handleEmbedAsset : undefined}
+          onEmbedInlineEntry={editorConfig.allowInlineEntries ? handleEmbedInlineEntry : undefined}
+          disabledFeatures={editorConfig.disabledFeatures}
+          availableHeadings={editorConfig.availableHeadings}
+          availableMarks={editorConfig.availableMarks}
+          allowHyperlinks={editorConfig.allowHyperlinks}
         />
       )}
       <div className="contentful-editor__content-wrapper">
