@@ -79,10 +79,9 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
     })
   );
 
-  // Add underline extension only if it's in availableMarks
-  if (availableMarks.includes('underline')) {
-    extensions.push(Underline);
-  }
+  // Always add underline extension to schema to support content with underline marks
+  // The availableMarks prop only controls toolbar visibility, not schema support
+  extensions.push(Underline);
 
   // Add other extensions
   extensions.push(

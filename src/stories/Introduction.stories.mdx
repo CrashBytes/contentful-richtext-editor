@@ -1,0 +1,102 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Introduction" />
+
+# @crashbytes/contentful-richtext-editor
+
+A modern, Tiptap-based rich text editor that's fully compatible with Contentful's rich text format. Provides the same editing experience as Contentful's native editor while maintaining perfect compatibility with Contentful's document structure.
+
+## 🚀 Quick Start
+
+```bash
+npm install @crashbytes/contentful-richtext-editor
+```
+
+```jsx
+import React, { useState } from 'react';
+import { ContentfulRichTextEditor } from '@crashbytes/contentful-richtext-editor';
+import '@crashbytes/contentful-richtext-editor/dist/index.css';
+
+function App() {
+  const [content, setContent] = useState();
+
+  return (
+    <ContentfulRichTextEditor
+      placeholder="Start writing..."
+      onChange={setContent}
+    />
+  );
+}
+```
+
+## ✨ Features
+
+- **Full Contentful Compatibility** - Seamless conversion between Contentful and Tiptap formats
+- **Modern UI** - Clean, intuitive interface matching Contentful's design
+- **TypeScript Support** - Complete type safety with Contentful's rich text types
+- **Extensible** - Built on Tiptap v2 for easy customization
+- **Lightweight** - Tree-shakeable, only import what you need
+- **Responsive** - Works on desktop and mobile devices
+
+## 📖 Supported Features
+
+- **Text Formatting**: Bold, italic, underline
+- **Headings**: H1 through H6
+- **Lists**: Ordered and unordered lists
+- **Links**: Hyperlinks with URL validation
+- **Tables**: Full table support with headers
+- **Quotes**: Blockquotes
+- **Embedded Content**: Callbacks for Contentful entries and assets
+- **Undo/Redo**: Full history support
+
+## 🎨 Themes
+
+Choose from three built-in themes:
+
+- **Contentful** (default) - Matches Contentful's native editor
+- **Minimal** - Clean, reduced visual elements
+- **Default** - Standard rich text editor with serif fonts
+
+## 🔧 Customization
+
+The editor is highly customizable:
+
+- **Disable Features**: Remove unwanted toolbar buttons
+- **Limit Headings**: Control which heading levels are available
+- **Custom Marks**: Choose which text formatting options to show
+- **Custom Styling**: Add your own CSS classes and styles
+- **Embed Handlers**: Integrate with your Contentful management workflow
+
+## 📚 Stories in this Storybook
+
+Explore the different components and configurations:
+
+- **ContentfulRichTextEditor** - Main editor component with various configurations
+- **ContentfulToolbar** - Standalone toolbar component
+- **Utils/ContentfulTransform** - Utility functions for data conversion
+
+## 🛠 Development
+
+This Storybook serves as both documentation and a development environment for testing the editor in different scenarios.
+
+## 📝 TypeScript
+
+All components are written in TypeScript and include full type definitions:
+
+```tsx
+import type { 
+  Document, 
+  ContentfulRichTextEditorProps 
+} from '@crashbytes/contentful-richtext-editor';
+```
+
+## 🌐 Browser Support
+
+- Chrome 80+
+- Firefox 78+
+- Safari 13+
+- Edge 80+
+
+---
+
+**Made with ❤️ for the Contentful community**
