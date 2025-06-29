@@ -11681,7 +11681,7 @@ function ruleFromNode(dom) {
     }
     return null;
 }
-const isInline$1 = /^(a|abbr|acronym|b|bd[io]|big|br|button|cite|code|data(list)?|del|dfn|em|i|ins|kbd|label|map|mark|meter|output|q|ruby|s|samp|small|span|strong|su[bp]|time|u|tt|var)$/i;
+const isInline = /^(a|abbr|acronym|b|bd[io]|big|br|button|cite|code|data(list)?|del|dfn|em|i|ins|kbd|label|map|mark|meter|output|q|ruby|s|samp|small|span|strong|su[bp]|time|u|tt|var)$/i;
 function readDOMChange(view, from, to, typeOver, addedNodes) {
     let compositionID = view.input.compositionPendingChanges || (view.composing ? view.input.compositionID : 0);
     view.input.compositionPendingChanges = 0;
@@ -11726,7 +11726,7 @@ function readDOMChange(view, from, to, typeOver, addedNodes) {
     if (change)
         view.input.domChangeCount++;
     if ((ios && view.input.lastIOSEnter > Date.now() - 225 || android) &&
-        addedNodes.some(n => n.nodeType == 1 && !isInline$1.test(n.nodeName)) &&
+        addedNodes.some(n => n.nodeType == 1 && !isInline.test(n.nodeName)) &&
         (!change || change.endA >= change.endB) &&
         view.someProp("handleKeyDown", f => f(view, keyEvent(13, "Enter")))) {
         view.input.lastIOSEnter = 0;
@@ -26591,289 +26591,350 @@ const ContentfulToolbar = ({ editor, onEmbedEntry, onEmbedAsset, disabledFeature
                                         }, autoFocus: true }), jsxRuntime.jsx("button", { onClick: handleLinkSubmit, children: "\u2713" }), jsxRuntime.jsx("button", { onClick: () => setShowLinkInput(false), children: "\u2717" })] }))] }))] }), jsxRuntime.jsx("div", { className: "contentful-toolbar__separator" }), jsxRuntime.jsxs("div", { className: "contentful-toolbar__group", children: [!isDisabled('lists') && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('bulletList') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleBulletList().run(), title: "Bullet List", children: "\u2022 \u2261" }), jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('orderedList') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleOrderedList().run(), title: "Numbered List", children: "1. \u2261" })] })), !isDisabled('quote') && (jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('blockquote') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleBlockquote().run(), title: "Quote", children: "\"" })), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: () => editor.chain().focus().setHorizontalRule().run(), title: "Horizontal Rule", children: "\u2014" }), !isDisabled('table') && (jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: insertTable, title: "Insert Table", children: "\u229E" }))] }), jsxRuntime.jsx("div", { className: "contentful-toolbar__separator" }), jsxRuntime.jsx("div", { className: "contentful-toolbar__group contentful-toolbar__group--right", children: !isDisabled('embed') && (jsxRuntime.jsxs("div", { className: "contentful-toolbar__embed-dropdown", children: [jsxRuntime.jsx("button", { className: "contentful-toolbar__embed-button", children: "+ Embed \u25BC" }), jsxRuntime.jsxs("div", { className: "contentful-toolbar__embed-menu", children: [onEmbedEntry && (jsxRuntime.jsx("button", { className: "contentful-toolbar__embed-option", onClick: onEmbedEntry, children: "Entry" })), onEmbedAsset && (jsxRuntime.jsx("button", { className: "contentful-toolbar__embed-option", onClick: onEmbedAsset, children: "Media" }))] })] })) })] }));
 };
 
-var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
 var dist = {};
 
 var blocks = {};
 
-Object.defineProperty(blocks, "__esModule", { value: true });
-blocks.BLOCKS = void 0;
-/**
- * Map of all Contentful block types. Blocks contain inline or block nodes.
- */
-var BLOCKS;
-(function (BLOCKS) {
-    BLOCKS["DOCUMENT"] = "document";
-    BLOCKS["PARAGRAPH"] = "paragraph";
-    BLOCKS["HEADING_1"] = "heading-1";
-    BLOCKS["HEADING_2"] = "heading-2";
-    BLOCKS["HEADING_3"] = "heading-3";
-    BLOCKS["HEADING_4"] = "heading-4";
-    BLOCKS["HEADING_5"] = "heading-5";
-    BLOCKS["HEADING_6"] = "heading-6";
-    BLOCKS["OL_LIST"] = "ordered-list";
-    BLOCKS["UL_LIST"] = "unordered-list";
-    BLOCKS["LIST_ITEM"] = "list-item";
-    BLOCKS["HR"] = "hr";
-    BLOCKS["QUOTE"] = "blockquote";
-    BLOCKS["EMBEDDED_ENTRY"] = "embedded-entry-block";
-    BLOCKS["EMBEDDED_ASSET"] = "embedded-asset-block";
-    BLOCKS["EMBEDDED_RESOURCE"] = "embedded-resource-block";
-    BLOCKS["TABLE"] = "table";
-    BLOCKS["TABLE_ROW"] = "table-row";
-    BLOCKS["TABLE_CELL"] = "table-cell";
-    BLOCKS["TABLE_HEADER_CELL"] = "table-header-cell";
-})(BLOCKS || (blocks.BLOCKS = BLOCKS = {}));
+var hasRequiredBlocks;
+
+function requireBlocks () {
+	if (hasRequiredBlocks) return blocks;
+	hasRequiredBlocks = 1;
+	Object.defineProperty(blocks, "__esModule", { value: true });
+	blocks.BLOCKS = void 0;
+	/**
+	 * Map of all Contentful block types. Blocks contain inline or block nodes.
+	 */
+	var BLOCKS;
+	(function (BLOCKS) {
+	    BLOCKS["DOCUMENT"] = "document";
+	    BLOCKS["PARAGRAPH"] = "paragraph";
+	    BLOCKS["HEADING_1"] = "heading-1";
+	    BLOCKS["HEADING_2"] = "heading-2";
+	    BLOCKS["HEADING_3"] = "heading-3";
+	    BLOCKS["HEADING_4"] = "heading-4";
+	    BLOCKS["HEADING_5"] = "heading-5";
+	    BLOCKS["HEADING_6"] = "heading-6";
+	    BLOCKS["OL_LIST"] = "ordered-list";
+	    BLOCKS["UL_LIST"] = "unordered-list";
+	    BLOCKS["LIST_ITEM"] = "list-item";
+	    BLOCKS["HR"] = "hr";
+	    BLOCKS["QUOTE"] = "blockquote";
+	    BLOCKS["EMBEDDED_ENTRY"] = "embedded-entry-block";
+	    BLOCKS["EMBEDDED_ASSET"] = "embedded-asset-block";
+	    BLOCKS["EMBEDDED_RESOURCE"] = "embedded-resource-block";
+	    BLOCKS["TABLE"] = "table";
+	    BLOCKS["TABLE_ROW"] = "table-row";
+	    BLOCKS["TABLE_CELL"] = "table-cell";
+	    BLOCKS["TABLE_HEADER_CELL"] = "table-header-cell";
+	})(BLOCKS || (blocks.BLOCKS = BLOCKS = {}));
+	
+	return blocks;
+}
 
 var inlines = {};
 
-Object.defineProperty(inlines, "__esModule", { value: true });
-inlines.INLINES = void 0;
-/**
- * Map of all Contentful inline types. Inline contain inline or text nodes.
- *
- * @note This should be kept in alphabetical order since the
- * [validation package](https://github.com/contentful/content-stack/tree/master/packages/validation)
- *  relies on the values being in a predictable order.
- */
-var INLINES;
-(function (INLINES) {
-    INLINES["ASSET_HYPERLINK"] = "asset-hyperlink";
-    INLINES["EMBEDDED_ENTRY"] = "embedded-entry-inline";
-    INLINES["EMBEDDED_RESOURCE"] = "embedded-resource-inline";
-    INLINES["ENTRY_HYPERLINK"] = "entry-hyperlink";
-    INLINES["HYPERLINK"] = "hyperlink";
-    INLINES["RESOURCE_HYPERLINK"] = "resource-hyperlink";
-})(INLINES || (inlines.INLINES = INLINES = {}));
+var hasRequiredInlines;
+
+function requireInlines () {
+	if (hasRequiredInlines) return inlines;
+	hasRequiredInlines = 1;
+	Object.defineProperty(inlines, "__esModule", { value: true });
+	inlines.INLINES = void 0;
+	/**
+	 * Map of all Contentful inline types. Inline contain inline or text nodes.
+	 *
+	 * @note This should be kept in alphabetical order since the
+	 * [validation package](https://github.com/contentful/content-stack/tree/master/packages/validation)
+	 *  relies on the values being in a predictable order.
+	 */
+	var INLINES;
+	(function (INLINES) {
+	    INLINES["ASSET_HYPERLINK"] = "asset-hyperlink";
+	    INLINES["EMBEDDED_ENTRY"] = "embedded-entry-inline";
+	    INLINES["EMBEDDED_RESOURCE"] = "embedded-resource-inline";
+	    INLINES["ENTRY_HYPERLINK"] = "entry-hyperlink";
+	    INLINES["HYPERLINK"] = "hyperlink";
+	    INLINES["RESOURCE_HYPERLINK"] = "resource-hyperlink";
+	})(INLINES || (inlines.INLINES = INLINES = {}));
+	
+	return inlines;
+}
 
 var marks = {};
 
-Object.defineProperty(marks, "__esModule", { value: true });
-marks.MARKS = void 0;
-/**
- * Map of all Contentful marks.
- */
-var MARKS;
-(function (MARKS) {
-    MARKS["BOLD"] = "bold";
-    MARKS["ITALIC"] = "italic";
-    MARKS["UNDERLINE"] = "underline";
-    MARKS["CODE"] = "code";
-    MARKS["SUPERSCRIPT"] = "superscript";
-    MARKS["SUBSCRIPT"] = "subscript";
-    MARKS["STRIKETHROUGH"] = "strikethrough";
-})(MARKS || (marks.MARKS = MARKS = {}));
+var hasRequiredMarks;
+
+function requireMarks () {
+	if (hasRequiredMarks) return marks;
+	hasRequiredMarks = 1;
+	Object.defineProperty(marks, "__esModule", { value: true });
+	marks.MARKS = void 0;
+	/**
+	 * Map of all Contentful marks.
+	 */
+	var MARKS;
+	(function (MARKS) {
+	    MARKS["BOLD"] = "bold";
+	    MARKS["ITALIC"] = "italic";
+	    MARKS["UNDERLINE"] = "underline";
+	    MARKS["CODE"] = "code";
+	    MARKS["SUPERSCRIPT"] = "superscript";
+	    MARKS["SUBSCRIPT"] = "subscript";
+	    MARKS["STRIKETHROUGH"] = "strikethrough";
+	})(MARKS || (marks.MARKS = MARKS = {}));
+	
+	return marks;
+}
 
 var schemaConstraints = {};
 
-(function (exports) {
-	var __spreadArray = (commonjsGlobal && commonjsGlobal.__spreadArray) || function (to, from, pack) {
-	    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-	        if (ar || !(i in from)) {
-	            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-	            ar[i] = from[i];
-	        }
-	    }
-	    return to.concat(ar || Array.prototype.slice.call(from));
-	};
-	var _a;
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.V1_MARKS = exports.V1_NODE_TYPES = exports.TEXT_CONTAINERS = exports.HEADINGS = exports.CONTAINERS = exports.VOID_BLOCKS = exports.TABLE_BLOCKS = exports.LIST_ITEM_BLOCKS = exports.TOP_LEVEL_BLOCKS = void 0;
-	var blocks_1 = blocks;
-	var inlines_1 = inlines;
-	var marks_1 = marks;
-	/**
-	 * Array of all top level block types.
-	 * Only these block types can be the direct children of the document.
-	 */
-	exports.TOP_LEVEL_BLOCKS = [
-	    blocks_1.BLOCKS.PARAGRAPH,
-	    blocks_1.BLOCKS.HEADING_1,
-	    blocks_1.BLOCKS.HEADING_2,
-	    blocks_1.BLOCKS.HEADING_3,
-	    blocks_1.BLOCKS.HEADING_4,
-	    blocks_1.BLOCKS.HEADING_5,
-	    blocks_1.BLOCKS.HEADING_6,
-	    blocks_1.BLOCKS.OL_LIST,
-	    blocks_1.BLOCKS.UL_LIST,
-	    blocks_1.BLOCKS.HR,
-	    blocks_1.BLOCKS.QUOTE,
-	    blocks_1.BLOCKS.EMBEDDED_ENTRY,
-	    blocks_1.BLOCKS.EMBEDDED_ASSET,
-	    blocks_1.BLOCKS.EMBEDDED_RESOURCE,
-	    blocks_1.BLOCKS.TABLE,
-	];
-	/**
-	 * Array of all allowed block types inside list items
-	 */
-	exports.LIST_ITEM_BLOCKS = [
-	    blocks_1.BLOCKS.PARAGRAPH,
-	    blocks_1.BLOCKS.HEADING_1,
-	    blocks_1.BLOCKS.HEADING_2,
-	    blocks_1.BLOCKS.HEADING_3,
-	    blocks_1.BLOCKS.HEADING_4,
-	    blocks_1.BLOCKS.HEADING_5,
-	    blocks_1.BLOCKS.HEADING_6,
-	    blocks_1.BLOCKS.OL_LIST,
-	    blocks_1.BLOCKS.UL_LIST,
-	    blocks_1.BLOCKS.HR,
-	    blocks_1.BLOCKS.QUOTE,
-	    blocks_1.BLOCKS.EMBEDDED_ENTRY,
-	    blocks_1.BLOCKS.EMBEDDED_ASSET,
-	    blocks_1.BLOCKS.EMBEDDED_RESOURCE,
-	];
-	exports.TABLE_BLOCKS = [
-	    blocks_1.BLOCKS.TABLE,
-	    blocks_1.BLOCKS.TABLE_ROW,
-	    blocks_1.BLOCKS.TABLE_CELL,
-	    blocks_1.BLOCKS.TABLE_HEADER_CELL,
-	];
-	/**
-	 * Array of all void block types
-	 */
-	exports.VOID_BLOCKS = [
-	    blocks_1.BLOCKS.HR,
-	    blocks_1.BLOCKS.EMBEDDED_ENTRY,
-	    blocks_1.BLOCKS.EMBEDDED_ASSET,
-	    blocks_1.BLOCKS.EMBEDDED_RESOURCE,
-	];
-	/**
-	 * Dictionary of all container block types, and the set block types they accept as children.
-	 *
-	 * Note: This does not include `[BLOCKS.DOCUMENT]: TOP_LEVEL_BLOCKS`
-	 */
-	exports.CONTAINERS = (_a = {},
-	    _a[blocks_1.BLOCKS.OL_LIST] = [blocks_1.BLOCKS.LIST_ITEM],
-	    _a[blocks_1.BLOCKS.UL_LIST] = [blocks_1.BLOCKS.LIST_ITEM],
-	    _a[blocks_1.BLOCKS.LIST_ITEM] = exports.LIST_ITEM_BLOCKS,
-	    _a[blocks_1.BLOCKS.QUOTE] = [blocks_1.BLOCKS.PARAGRAPH],
-	    _a[blocks_1.BLOCKS.TABLE] = [blocks_1.BLOCKS.TABLE_ROW],
-	    _a[blocks_1.BLOCKS.TABLE_ROW] = [blocks_1.BLOCKS.TABLE_CELL, blocks_1.BLOCKS.TABLE_HEADER_CELL],
-	    _a[blocks_1.BLOCKS.TABLE_CELL] = [blocks_1.BLOCKS.PARAGRAPH, blocks_1.BLOCKS.UL_LIST, blocks_1.BLOCKS.OL_LIST],
-	    _a[blocks_1.BLOCKS.TABLE_HEADER_CELL] = [blocks_1.BLOCKS.PARAGRAPH],
-	    _a);
-	/**
-	 * Array of all heading levels
-	 */
-	exports.HEADINGS = [
-	    blocks_1.BLOCKS.HEADING_1,
-	    blocks_1.BLOCKS.HEADING_2,
-	    blocks_1.BLOCKS.HEADING_3,
-	    blocks_1.BLOCKS.HEADING_4,
-	    blocks_1.BLOCKS.HEADING_5,
-	    blocks_1.BLOCKS.HEADING_6,
-	];
-	/**
-	 * Array of all block types that may contain text and inline nodes.
-	 */
-	exports.TEXT_CONTAINERS = __spreadArray([blocks_1.BLOCKS.PARAGRAPH], exports.HEADINGS, true);
-	/**
-	 * Node types before `tables` release.
-	 */
-	exports.V1_NODE_TYPES = [
-	    blocks_1.BLOCKS.DOCUMENT,
-	    blocks_1.BLOCKS.PARAGRAPH,
-	    blocks_1.BLOCKS.HEADING_1,
-	    blocks_1.BLOCKS.HEADING_2,
-	    blocks_1.BLOCKS.HEADING_3,
-	    blocks_1.BLOCKS.HEADING_4,
-	    blocks_1.BLOCKS.HEADING_5,
-	    blocks_1.BLOCKS.HEADING_6,
-	    blocks_1.BLOCKS.OL_LIST,
-	    blocks_1.BLOCKS.UL_LIST,
-	    blocks_1.BLOCKS.LIST_ITEM,
-	    blocks_1.BLOCKS.HR,
-	    blocks_1.BLOCKS.QUOTE,
-	    blocks_1.BLOCKS.EMBEDDED_ENTRY,
-	    blocks_1.BLOCKS.EMBEDDED_ASSET,
-	    inlines_1.INLINES.HYPERLINK,
-	    inlines_1.INLINES.ENTRY_HYPERLINK,
-	    inlines_1.INLINES.ASSET_HYPERLINK,
-	    inlines_1.INLINES.EMBEDDED_ENTRY,
-	    'text',
-	];
-	/**
-	 * Marks before `superscript` & `subscript` release.
-	 */
-	exports.V1_MARKS = [marks_1.MARKS.BOLD, marks_1.MARKS.CODE, marks_1.MARKS.ITALIC, marks_1.MARKS.UNDERLINE];
-	
-} (schemaConstraints));
+var hasRequiredSchemaConstraints;
+
+function requireSchemaConstraints () {
+	if (hasRequiredSchemaConstraints) return schemaConstraints;
+	hasRequiredSchemaConstraints = 1;
+	(function (exports) {
+		var __spreadArray = (schemaConstraints && schemaConstraints.__spreadArray) || function (to, from, pack) {
+		    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+		        if (ar || !(i in from)) {
+		            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+		            ar[i] = from[i];
+		        }
+		    }
+		    return to.concat(ar || Array.prototype.slice.call(from));
+		};
+		var _a;
+		Object.defineProperty(exports, "__esModule", { value: true });
+		exports.V1_MARKS = exports.V1_NODE_TYPES = exports.TEXT_CONTAINERS = exports.HEADINGS = exports.CONTAINERS = exports.VOID_BLOCKS = exports.TABLE_BLOCKS = exports.LIST_ITEM_BLOCKS = exports.TOP_LEVEL_BLOCKS = void 0;
+		var blocks_1 = requireBlocks();
+		var inlines_1 = requireInlines();
+		var marks_1 = requireMarks();
+		/**
+		 * Array of all top level block types.
+		 * Only these block types can be the direct children of the document.
+		 */
+		exports.TOP_LEVEL_BLOCKS = [
+		    blocks_1.BLOCKS.PARAGRAPH,
+		    blocks_1.BLOCKS.HEADING_1,
+		    blocks_1.BLOCKS.HEADING_2,
+		    blocks_1.BLOCKS.HEADING_3,
+		    blocks_1.BLOCKS.HEADING_4,
+		    blocks_1.BLOCKS.HEADING_5,
+		    blocks_1.BLOCKS.HEADING_6,
+		    blocks_1.BLOCKS.OL_LIST,
+		    blocks_1.BLOCKS.UL_LIST,
+		    blocks_1.BLOCKS.HR,
+		    blocks_1.BLOCKS.QUOTE,
+		    blocks_1.BLOCKS.EMBEDDED_ENTRY,
+		    blocks_1.BLOCKS.EMBEDDED_ASSET,
+		    blocks_1.BLOCKS.EMBEDDED_RESOURCE,
+		    blocks_1.BLOCKS.TABLE,
+		];
+		/**
+		 * Array of all allowed block types inside list items
+		 */
+		exports.LIST_ITEM_BLOCKS = [
+		    blocks_1.BLOCKS.PARAGRAPH,
+		    blocks_1.BLOCKS.HEADING_1,
+		    blocks_1.BLOCKS.HEADING_2,
+		    blocks_1.BLOCKS.HEADING_3,
+		    blocks_1.BLOCKS.HEADING_4,
+		    blocks_1.BLOCKS.HEADING_5,
+		    blocks_1.BLOCKS.HEADING_6,
+		    blocks_1.BLOCKS.OL_LIST,
+		    blocks_1.BLOCKS.UL_LIST,
+		    blocks_1.BLOCKS.HR,
+		    blocks_1.BLOCKS.QUOTE,
+		    blocks_1.BLOCKS.EMBEDDED_ENTRY,
+		    blocks_1.BLOCKS.EMBEDDED_ASSET,
+		    blocks_1.BLOCKS.EMBEDDED_RESOURCE,
+		];
+		exports.TABLE_BLOCKS = [
+		    blocks_1.BLOCKS.TABLE,
+		    blocks_1.BLOCKS.TABLE_ROW,
+		    blocks_1.BLOCKS.TABLE_CELL,
+		    blocks_1.BLOCKS.TABLE_HEADER_CELL,
+		];
+		/**
+		 * Array of all void block types
+		 */
+		exports.VOID_BLOCKS = [
+		    blocks_1.BLOCKS.HR,
+		    blocks_1.BLOCKS.EMBEDDED_ENTRY,
+		    blocks_1.BLOCKS.EMBEDDED_ASSET,
+		    blocks_1.BLOCKS.EMBEDDED_RESOURCE,
+		];
+		/**
+		 * Dictionary of all container block types, and the set block types they accept as children.
+		 *
+		 * Note: This does not include `[BLOCKS.DOCUMENT]: TOP_LEVEL_BLOCKS`
+		 */
+		exports.CONTAINERS = (_a = {},
+		    _a[blocks_1.BLOCKS.OL_LIST] = [blocks_1.BLOCKS.LIST_ITEM],
+		    _a[blocks_1.BLOCKS.UL_LIST] = [blocks_1.BLOCKS.LIST_ITEM],
+		    _a[blocks_1.BLOCKS.LIST_ITEM] = exports.LIST_ITEM_BLOCKS,
+		    _a[blocks_1.BLOCKS.QUOTE] = [blocks_1.BLOCKS.PARAGRAPH],
+		    _a[blocks_1.BLOCKS.TABLE] = [blocks_1.BLOCKS.TABLE_ROW],
+		    _a[blocks_1.BLOCKS.TABLE_ROW] = [blocks_1.BLOCKS.TABLE_CELL, blocks_1.BLOCKS.TABLE_HEADER_CELL],
+		    _a[blocks_1.BLOCKS.TABLE_CELL] = [blocks_1.BLOCKS.PARAGRAPH, blocks_1.BLOCKS.UL_LIST, blocks_1.BLOCKS.OL_LIST],
+		    _a[blocks_1.BLOCKS.TABLE_HEADER_CELL] = [blocks_1.BLOCKS.PARAGRAPH],
+		    _a);
+		/**
+		 * Array of all heading levels
+		 */
+		exports.HEADINGS = [
+		    blocks_1.BLOCKS.HEADING_1,
+		    blocks_1.BLOCKS.HEADING_2,
+		    blocks_1.BLOCKS.HEADING_3,
+		    blocks_1.BLOCKS.HEADING_4,
+		    blocks_1.BLOCKS.HEADING_5,
+		    blocks_1.BLOCKS.HEADING_6,
+		];
+		/**
+		 * Array of all block types that may contain text and inline nodes.
+		 */
+		exports.TEXT_CONTAINERS = __spreadArray([blocks_1.BLOCKS.PARAGRAPH], exports.HEADINGS, true);
+		/**
+		 * Node types before `tables` release.
+		 */
+		exports.V1_NODE_TYPES = [
+		    blocks_1.BLOCKS.DOCUMENT,
+		    blocks_1.BLOCKS.PARAGRAPH,
+		    blocks_1.BLOCKS.HEADING_1,
+		    blocks_1.BLOCKS.HEADING_2,
+		    blocks_1.BLOCKS.HEADING_3,
+		    blocks_1.BLOCKS.HEADING_4,
+		    blocks_1.BLOCKS.HEADING_5,
+		    blocks_1.BLOCKS.HEADING_6,
+		    blocks_1.BLOCKS.OL_LIST,
+		    blocks_1.BLOCKS.UL_LIST,
+		    blocks_1.BLOCKS.LIST_ITEM,
+		    blocks_1.BLOCKS.HR,
+		    blocks_1.BLOCKS.QUOTE,
+		    blocks_1.BLOCKS.EMBEDDED_ENTRY,
+		    blocks_1.BLOCKS.EMBEDDED_ASSET,
+		    inlines_1.INLINES.HYPERLINK,
+		    inlines_1.INLINES.ENTRY_HYPERLINK,
+		    inlines_1.INLINES.ASSET_HYPERLINK,
+		    inlines_1.INLINES.EMBEDDED_ENTRY,
+		    'text',
+		];
+		/**
+		 * Marks before `superscript` & `subscript` release.
+		 */
+		exports.V1_MARKS = [marks_1.MARKS.BOLD, marks_1.MARKS.CODE, marks_1.MARKS.ITALIC, marks_1.MARKS.UNDERLINE];
+		
+	} (schemaConstraints));
+	return schemaConstraints;
+}
 
 var types = {};
 
-Object.defineProperty(types, "__esModule", { value: true });
+var hasRequiredTypes;
+
+function requireTypes () {
+	if (hasRequiredTypes) return types;
+	hasRequiredTypes = 1;
+	Object.defineProperty(types, "__esModule", { value: true });
+	
+	return types;
+}
 
 var nodeTypes = {};
 
-Object.defineProperty(nodeTypes, "__esModule", { value: true });
+var hasRequiredNodeTypes;
+
+function requireNodeTypes () {
+	if (hasRequiredNodeTypes) return nodeTypes;
+	hasRequiredNodeTypes = 1;
+	Object.defineProperty(nodeTypes, "__esModule", { value: true });
+	
+	return nodeTypes;
+}
 
 var emptyDocument = {};
 
-Object.defineProperty(emptyDocument, "__esModule", { value: true });
-emptyDocument.EMPTY_DOCUMENT = void 0;
-var blocks_1$1 = blocks;
-/**
- * A rich text document considered to be empty.
- * Any other document structure than this is not considered empty.
- */
-emptyDocument.EMPTY_DOCUMENT = {
-    nodeType: blocks_1$1.BLOCKS.DOCUMENT,
-    data: {},
-    content: [
-        {
-            nodeType: blocks_1$1.BLOCKS.PARAGRAPH,
-            data: {},
-            content: [
-                {
-                    nodeType: 'text',
-                    value: '',
-                    marks: [],
-                    data: {},
-                },
-            ],
-        },
-    ],
-};
+var hasRequiredEmptyDocument;
+
+function requireEmptyDocument () {
+	if (hasRequiredEmptyDocument) return emptyDocument;
+	hasRequiredEmptyDocument = 1;
+	Object.defineProperty(emptyDocument, "__esModule", { value: true });
+	emptyDocument.EMPTY_DOCUMENT = void 0;
+	var blocks_1 = requireBlocks();
+	/**
+	 * A rich text document considered to be empty.
+	 * Any other document structure than this is not considered empty.
+	 */
+	emptyDocument.EMPTY_DOCUMENT = {
+	    nodeType: blocks_1.BLOCKS.DOCUMENT,
+	    data: {},
+	    content: [
+	        {
+	            nodeType: blocks_1.BLOCKS.PARAGRAPH,
+	            data: {},
+	            content: [
+	                {
+	                    nodeType: 'text',
+	                    value: '',
+	                    marks: [],
+	                    data: {},
+	                },
+	            ],
+	        },
+	    ],
+	};
+	
+	return emptyDocument;
+}
 
 var helpers = {};
 
-Object.defineProperty(helpers, "__esModule", { value: true });
-helpers.isInline = isInline;
-helpers.isBlock = isBlock;
-helpers.isText = isText;
-var blocks_1 = blocks;
-var inlines_1 = inlines;
-/**
- * Tiny replacement for Object.values(object).includes(key) to
- * avoid including CoreJS polyfills
- */
-function hasValue(obj, value) {
-    for (var _i = 0, _a = Object.keys(obj); _i < _a.length; _i++) {
-        var key = _a[_i];
-        if (value === obj[key]) {
-            return true;
-        }
-    }
-    return false;
-}
-/**
- * Checks if the node is an instance of Inline.
- */
-function isInline(node) {
-    return hasValue(inlines_1.INLINES, node.nodeType);
-}
-/**
- * Checks if the node is an instance of Block.
- */
-function isBlock(node) {
-    return hasValue(blocks_1.BLOCKS, node.nodeType);
-}
-/**
- * Checks if the node is an instance of Text.
- */
-function isText(node) {
-    return node.nodeType === 'text';
+var hasRequiredHelpers;
+
+function requireHelpers () {
+	if (hasRequiredHelpers) return helpers;
+	hasRequiredHelpers = 1;
+	Object.defineProperty(helpers, "__esModule", { value: true });
+	helpers.isInline = isInline;
+	helpers.isBlock = isBlock;
+	helpers.isText = isText;
+	var blocks_1 = requireBlocks();
+	var inlines_1 = requireInlines();
+	/**
+	 * Tiny replacement for Object.values(object).includes(key) to
+	 * avoid including CoreJS polyfills
+	 */
+	function hasValue(obj, value) {
+	    for (var _i = 0, _a = Object.keys(obj); _i < _a.length; _i++) {
+	        var key = _a[_i];
+	        if (value === obj[key]) {
+	            return true;
+	        }
+	    }
+	    return false;
+	}
+	/**
+	 * Checks if the node is an instance of Inline.
+	 */
+	function isInline(node) {
+	    return hasValue(inlines_1.INLINES, node.nodeType);
+	}
+	/**
+	 * Checks if the node is an instance of Block.
+	 */
+	function isBlock(node) {
+	    return hasValue(blocks_1.BLOCKS, node.nodeType);
+	}
+	/**
+	 * Checks if the node is an instance of Text.
+	 */
+	function isText(node) {
+	    return node.nodeType === 'text';
+	}
+	
+	return helpers;
 }
 
 function commonjsRequire(path) {
@@ -26882,63 +26943,80 @@ function commonjsRequire(path) {
 
 var schemas = {};
 
-Object.defineProperty(schemas, "__esModule", { value: true });
-schemas.getSchemaWithNodeType = getSchemaWithNodeType;
-function getSchemaWithNodeType(nodeType) {
-    try {
-        return commonjsRequire("./generated/".concat(nodeType, ".json"));
-    }
-    catch (error) {
-        throw new Error("Schema for nodeType \"".concat(nodeType, "\" was not found."));
-    }
+var hasRequiredSchemas;
+
+function requireSchemas () {
+	if (hasRequiredSchemas) return schemas;
+	hasRequiredSchemas = 1;
+	Object.defineProperty(schemas, "__esModule", { value: true });
+	schemas.getSchemaWithNodeType = getSchemaWithNodeType;
+	function getSchemaWithNodeType(nodeType) {
+	    try {
+	        return commonjsRequire("./generated/".concat(nodeType, ".json"));
+	    }
+	    catch (error) {
+	        throw new Error("Schema for nodeType \"".concat(nodeType, "\" was not found."));
+	    }
+	}
+	
+	return schemas;
 }
 
-(function (exports) {
-	var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-	    if (k2 === undefined) k2 = k;
-	    var desc = Object.getOwnPropertyDescriptor(m, k);
-	    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-	      desc = { enumerable: true, get: function() { return m[k]; } };
-	    }
-	    Object.defineProperty(o, k2, desc);
-	}) : (function(o, m, k, k2) {
-	    if (k2 === undefined) k2 = k;
-	    o[k2] = m[k];
-	}));
-	var __setModuleDefault = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
-	    Object.defineProperty(o, "default", { enumerable: true, value: v });
-	}) : function(o, v) {
-	    o["default"] = v;
-	});
-	var __exportStar = (commonjsGlobal && commonjsGlobal.__exportStar) || function(m, exports) {
-	    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-	};
-	var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-	    if (mod && mod.__esModule) return mod;
-	    var result = {};
-	    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-	    __setModuleDefault(result, mod);
-	    return result;
-	};
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.getSchemaWithNodeType = exports.helpers = exports.EMPTY_DOCUMENT = exports.MARKS = exports.INLINES = exports.BLOCKS = void 0;
-	var blocks_1 = blocks;
-	Object.defineProperty(exports, "BLOCKS", { enumerable: true, get: function () { return blocks_1.BLOCKS; } });
-	var inlines_1 = inlines;
-	Object.defineProperty(exports, "INLINES", { enumerable: true, get: function () { return inlines_1.INLINES; } });
-	var marks_1 = marks;
-	Object.defineProperty(exports, "MARKS", { enumerable: true, get: function () { return marks_1.MARKS; } });
-	__exportStar(schemaConstraints, exports);
-	__exportStar(types, exports);
-	__exportStar(nodeTypes, exports);
-	var emptyDocument_1 = emptyDocument;
-	Object.defineProperty(exports, "EMPTY_DOCUMENT", { enumerable: true, get: function () { return emptyDocument_1.EMPTY_DOCUMENT; } });
-	var helpers$1 = __importStar(helpers);
-	exports.helpers = helpers$1;
-	var schemas_1 = schemas;
-	Object.defineProperty(exports, "getSchemaWithNodeType", { enumerable: true, get: function () { return schemas_1.getSchemaWithNodeType; } });
-	
-} (dist));
+var hasRequiredDist;
+
+function requireDist () {
+	if (hasRequiredDist) return dist;
+	hasRequiredDist = 1;
+	(function (exports) {
+		var __createBinding = (dist && dist.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+		    if (k2 === undefined) k2 = k;
+		    var desc = Object.getOwnPropertyDescriptor(m, k);
+		    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+		      desc = { enumerable: true, get: function() { return m[k]; } };
+		    }
+		    Object.defineProperty(o, k2, desc);
+		}) : (function(o, m, k, k2) {
+		    if (k2 === undefined) k2 = k;
+		    o[k2] = m[k];
+		}));
+		var __setModuleDefault = (dist && dist.__setModuleDefault) || (Object.create ? (function(o, v) {
+		    Object.defineProperty(o, "default", { enumerable: true, value: v });
+		}) : function(o, v) {
+		    o["default"] = v;
+		});
+		var __exportStar = (dist && dist.__exportStar) || function(m, exports) {
+		    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+		};
+		var __importStar = (dist && dist.__importStar) || function (mod) {
+		    if (mod && mod.__esModule) return mod;
+		    var result = {};
+		    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+		    __setModuleDefault(result, mod);
+		    return result;
+		};
+		Object.defineProperty(exports, "__esModule", { value: true });
+		exports.getSchemaWithNodeType = exports.helpers = exports.EMPTY_DOCUMENT = exports.MARKS = exports.INLINES = exports.BLOCKS = void 0;
+		var blocks_1 = requireBlocks();
+		Object.defineProperty(exports, "BLOCKS", { enumerable: true, get: function () { return blocks_1.BLOCKS; } });
+		var inlines_1 = requireInlines();
+		Object.defineProperty(exports, "INLINES", { enumerable: true, get: function () { return inlines_1.INLINES; } });
+		var marks_1 = requireMarks();
+		Object.defineProperty(exports, "MARKS", { enumerable: true, get: function () { return marks_1.MARKS; } });
+		__exportStar(requireSchemaConstraints(), exports);
+		__exportStar(requireTypes(), exports);
+		__exportStar(requireNodeTypes(), exports);
+		var emptyDocument_1 = requireEmptyDocument();
+		Object.defineProperty(exports, "EMPTY_DOCUMENT", { enumerable: true, get: function () { return emptyDocument_1.EMPTY_DOCUMENT; } });
+		var helpers = __importStar(requireHelpers());
+		exports.helpers = helpers;
+		var schemas_1 = requireSchemas();
+		Object.defineProperty(exports, "getSchemaWithNodeType", { enumerable: true, get: function () { return schemas_1.getSchemaWithNodeType; } });
+		
+	} (dist));
+	return dist;
+}
+
+var distExports = requireDist();
 
 /**
  * Converts a Contentful Rich Text Document to Tiptap JSON format
@@ -26947,97 +27025,97 @@ const contentfulToTiptap = (document) => {
     const convertNode = (node) => {
         var _a, _b, _c, _d, _e;
         switch (node.nodeType) {
-            case dist.BLOCKS.DOCUMENT:
+            case distExports.BLOCKS.DOCUMENT:
                 return {
                     type: 'doc',
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.PARAGRAPH:
+            case distExports.BLOCKS.PARAGRAPH:
                 return {
                     type: 'paragraph',
                     content: node.content ? node.content.map(child => convertNode(child)).flat() : [],
                 };
-            case dist.BLOCKS.HEADING_1:
+            case distExports.BLOCKS.HEADING_1:
                 return {
                     type: 'heading',
                     attrs: { level: 1 },
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.HEADING_2:
+            case distExports.BLOCKS.HEADING_2:
                 return {
                     type: 'heading',
                     attrs: { level: 2 },
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.HEADING_3:
+            case distExports.BLOCKS.HEADING_3:
                 return {
                     type: 'heading',
                     attrs: { level: 3 },
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.HEADING_4:
+            case distExports.BLOCKS.HEADING_4:
                 return {
                     type: 'heading',
                     attrs: { level: 4 },
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.HEADING_5:
+            case distExports.BLOCKS.HEADING_5:
                 return {
                     type: 'heading',
                     attrs: { level: 5 },
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.HEADING_6:
+            case distExports.BLOCKS.HEADING_6:
                 return {
                     type: 'heading',
                     attrs: { level: 6 },
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.UL_LIST:
+            case distExports.BLOCKS.UL_LIST:
                 return {
                     type: 'bulletList',
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.OL_LIST:
+            case distExports.BLOCKS.OL_LIST:
                 return {
                     type: 'orderedList',
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.LIST_ITEM:
+            case distExports.BLOCKS.LIST_ITEM:
                 return {
                     type: 'listItem',
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.QUOTE:
+            case distExports.BLOCKS.QUOTE:
                 return {
                     type: 'blockquote',
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.HR:
+            case distExports.BLOCKS.HR:
                 return {
                     type: 'horizontalRule',
                 };
-            case dist.BLOCKS.TABLE:
+            case distExports.BLOCKS.TABLE:
                 return {
                     type: 'table',
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.TABLE_ROW:
+            case distExports.BLOCKS.TABLE_ROW:
                 return {
                     type: 'tableRow',
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.TABLE_CELL:
+            case distExports.BLOCKS.TABLE_CELL:
                 return {
                     type: 'tableCell',
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.BLOCKS.TABLE_HEADER_CELL:
+            case distExports.BLOCKS.TABLE_HEADER_CELL:
                 return {
                     type: 'tableHeader',
                     content: node.content.map(child => convertNode(child)).flat(),
                 };
-            case dist.INLINES.HYPERLINK:
+            case distExports.INLINES.HYPERLINK:
                 return {
                     type: 'text',
                     text: node.content.map(child => child.nodeType === 'text' ? child.value : '').join(''),
@@ -27048,7 +27126,7 @@ const contentfulToTiptap = (document) => {
                         },
                     ],
                 };
-            case dist.BLOCKS.EMBEDDED_ENTRY:
+            case distExports.BLOCKS.EMBEDDED_ENTRY:
                 return {
                     type: 'paragraph',
                     content: [
@@ -27059,7 +27137,7 @@ const contentfulToTiptap = (document) => {
                         },
                     ],
                 };
-            case dist.BLOCKS.EMBEDDED_ASSET:
+            case distExports.BLOCKS.EMBEDDED_ASSET:
                 return {
                     type: 'paragraph',
                     content: [
@@ -27074,13 +27152,13 @@ const contentfulToTiptap = (document) => {
                 const textNode = node;
                 const marks = ((_e = textNode.marks) === null || _e === void 0 ? void 0 : _e.map(mark => {
                     switch (mark.type) {
-                        case dist.MARKS.BOLD:
+                        case distExports.MARKS.BOLD:
                             return { type: 'bold' };
-                        case dist.MARKS.ITALIC:
+                        case distExports.MARKS.ITALIC:
                             return { type: 'italic' };
-                        case dist.MARKS.UNDERLINE:
+                        case distExports.MARKS.UNDERLINE:
                             return { type: 'underline' };
-                        case dist.MARKS.CODE:
+                        case distExports.MARKS.CODE:
                             return { type: 'code' };
                         default:
                             return null;
@@ -27110,27 +27188,27 @@ const tiptapToContentful = (tiptapDoc) => {
         switch (node.type) {
             case 'doc':
                 return {
-                    nodeType: dist.BLOCKS.DOCUMENT,
+                    nodeType: distExports.BLOCKS.DOCUMENT,
                     data: {},
                     content: (_a = node.content) === null || _a === void 0 ? void 0 : _a.map((child) => convertNode(child)),
                 };
             case 'paragraph':
                 return {
-                    nodeType: dist.BLOCKS.PARAGRAPH,
+                    nodeType: distExports.BLOCKS.PARAGRAPH,
                     data: {},
                     content: (_b = node.content) === null || _b === void 0 ? void 0 : _b.map((child) => convertNode(child)),
                 };
             case 'heading':
                 const level = ((_c = node.attrs) === null || _c === void 0 ? void 0 : _c.level) || 1;
                 const headingTypes = {
-                    1: dist.BLOCKS.HEADING_1,
-                    2: dist.BLOCKS.HEADING_2,
-                    3: dist.BLOCKS.HEADING_3,
-                    4: dist.BLOCKS.HEADING_4,
-                    5: dist.BLOCKS.HEADING_5,
-                    6: dist.BLOCKS.HEADING_6,
+                    1: distExports.BLOCKS.HEADING_1,
+                    2: distExports.BLOCKS.HEADING_2,
+                    3: distExports.BLOCKS.HEADING_3,
+                    4: distExports.BLOCKS.HEADING_4,
+                    5: distExports.BLOCKS.HEADING_5,
+                    6: distExports.BLOCKS.HEADING_6,
                 };
-                const headingType = headingTypes[level] || dist.BLOCKS.HEADING_1;
+                const headingType = headingTypes[level] || distExports.BLOCKS.HEADING_1;
                 return {
                     nodeType: headingType,
                     data: {},
@@ -27138,55 +27216,55 @@ const tiptapToContentful = (tiptapDoc) => {
                 };
             case 'bulletList':
                 return {
-                    nodeType: dist.BLOCKS.UL_LIST,
+                    nodeType: distExports.BLOCKS.UL_LIST,
                     data: {},
                     content: (_e = node.content) === null || _e === void 0 ? void 0 : _e.map((child) => convertNode(child)),
                 };
             case 'orderedList':
                 return {
-                    nodeType: dist.BLOCKS.OL_LIST,
+                    nodeType: distExports.BLOCKS.OL_LIST,
                     data: {},
                     content: (_f = node.content) === null || _f === void 0 ? void 0 : _f.map((child) => convertNode(child)),
                 };
             case 'listItem':
                 return {
-                    nodeType: dist.BLOCKS.LIST_ITEM,
+                    nodeType: distExports.BLOCKS.LIST_ITEM,
                     data: {},
                     content: (_g = node.content) === null || _g === void 0 ? void 0 : _g.map((child) => convertNode(child)),
                 };
             case 'blockquote':
                 return {
-                    nodeType: dist.BLOCKS.QUOTE,
+                    nodeType: distExports.BLOCKS.QUOTE,
                     data: {},
                     content: (_h = node.content) === null || _h === void 0 ? void 0 : _h.map((child) => convertNode(child)),
                 };
             case 'horizontalRule':
                 return {
-                    nodeType: dist.BLOCKS.HR,
+                    nodeType: distExports.BLOCKS.HR,
                     data: {},
                     content: [],
                 };
             case 'table':
                 return {
-                    nodeType: dist.BLOCKS.TABLE,
+                    nodeType: distExports.BLOCKS.TABLE,
                     data: {},
                     content: (_j = node.content) === null || _j === void 0 ? void 0 : _j.map((child) => convertNode(child)),
                 };
             case 'tableRow':
                 return {
-                    nodeType: dist.BLOCKS.TABLE_ROW,
+                    nodeType: distExports.BLOCKS.TABLE_ROW,
                     data: {},
                     content: (_k = node.content) === null || _k === void 0 ? void 0 : _k.map((child) => convertNode(child)),
                 };
             case 'tableCell':
                 return {
-                    nodeType: dist.BLOCKS.TABLE_CELL,
+                    nodeType: distExports.BLOCKS.TABLE_CELL,
                     data: {},
                     content: (_l = node.content) === null || _l === void 0 ? void 0 : _l.map((child) => convertNode(child)),
                 };
             case 'tableHeader':
                 return {
-                    nodeType: dist.BLOCKS.TABLE_HEADER_CELL,
+                    nodeType: distExports.BLOCKS.TABLE_HEADER_CELL,
                     data: {},
                     content: (_m = node.content) === null || _m === void 0 ? void 0 : _m.map((child) => convertNode(child)),
                 };
@@ -27194,13 +27272,13 @@ const tiptapToContentful = (tiptapDoc) => {
                 const marks = ((_o = node.marks) === null || _o === void 0 ? void 0 : _o.map((mark) => {
                     switch (mark.type) {
                         case 'bold':
-                            return { type: dist.MARKS.BOLD };
+                            return { type: distExports.MARKS.BOLD };
                         case 'italic':
-                            return { type: dist.MARKS.ITALIC };
+                            return { type: distExports.MARKS.ITALIC };
                         case 'underline':
-                            return { type: dist.MARKS.UNDERLINE };
+                            return { type: distExports.MARKS.UNDERLINE };
                         case 'code':
-                            return { type: dist.MARKS.CODE };
+                            return { type: distExports.MARKS.CODE };
                         case 'link':
                             return null; // Links are handled separately
                         default:
@@ -27211,7 +27289,7 @@ const tiptapToContentful = (tiptapDoc) => {
                 const linkMark = (_p = node.marks) === null || _p === void 0 ? void 0 : _p.find((mark) => mark.type === 'link');
                 if (linkMark) {
                     return {
-                        nodeType: dist.INLINES.HYPERLINK,
+                        nodeType: distExports.INLINES.HYPERLINK,
                         data: {
                             uri: ((_q = linkMark.attrs) === null || _q === void 0 ? void 0 : _q.href) || '',
                         },
@@ -27234,7 +27312,7 @@ const tiptapToContentful = (tiptapDoc) => {
             default:
                 console.warn(`Unknown Tiptap node type: ${node.type}`);
                 return {
-                    nodeType: dist.BLOCKS.PARAGRAPH,
+                    nodeType: distExports.BLOCKS.PARAGRAPH,
                     data: {},
                     content: [],
                 };
@@ -27249,7 +27327,7 @@ const validateContentfulDocument = (document) => {
     if (!document || typeof document !== 'object') {
         return false;
     }
-    if (document.nodeType !== dist.BLOCKS.DOCUMENT) {
+    if (document.nodeType !== distExports.BLOCKS.DOCUMENT) {
         return false;
     }
     if (!Array.isArray(document.content)) {
@@ -27261,11 +27339,11 @@ const validateContentfulDocument = (document) => {
  * Creates an empty Contentful document
  */
 const createEmptyDocument = () => ({
-    nodeType: dist.BLOCKS.DOCUMENT,
+    nodeType: distExports.BLOCKS.DOCUMENT,
     data: {},
     content: [
         {
-            nodeType: dist.BLOCKS.PARAGRAPH,
+            nodeType: distExports.BLOCKS.PARAGRAPH,
             data: {},
             content: [],
         },
@@ -27298,10 +27376,9 @@ const ContentfulRichTextEditor = ({ initialValue, onChange, onEmbedEntry, onEmbe
             },
         },
     }));
-    // Add underline extension only if it's in availableMarks
-    if (availableMarks.includes('underline')) {
-        extensions.push(Underline);
-    }
+    // Always add underline extension to schema to support content with underline marks
+    // The availableMarks prop only controls toolbar visibility, not schema support
+    extensions.push(Underline);
     // Add other extensions
     extensions.push(Link.configure({
         openOnClick: false,
