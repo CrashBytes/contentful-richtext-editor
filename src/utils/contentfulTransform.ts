@@ -534,8 +534,8 @@ export const findEmbeddedContent = (document: Document): {
   searchNode(document);
 
   return {
-    entries: [...new Set(entries)], // Remove duplicates
-    assets: [...new Set(assets)],
-    inlineEntries: [...new Set(inlineEntries)],
+    entries: Array.from(new Set(entries)), // Remove duplicates
+    assets: Array.from(new Set(assets)),
+    inlineEntries: Array.from(new Set(inlineEntries)),
   };
 };

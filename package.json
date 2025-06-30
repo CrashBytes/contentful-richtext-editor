@@ -37,7 +37,11 @@
     "release:patch": "standard-version --release-as patch",
     "release:prerelease": "standard-version --prerelease",
     "release:alpha": "standard-version --prerelease alpha",
-    "release:beta": "standard-version --prerelease beta"
+    "release:beta": "standard-version --prerelease beta",
+    "test": "jest",
+    "test:watch": "jest --watchAll=false",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false"
   },
   "peerDependencies": {
     "react": ">=16.8.0",
@@ -57,6 +61,9 @@
     "@tiptap/starter-kit": "^2.0.0"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.27.2",
+    "@babel/preset-react": "^7.27.1",
+    "@babel/preset-typescript": "^7.27.1",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-node-resolve": "^16.0.1",
@@ -68,9 +75,19 @@
     "@storybook/react": "^7.6.20",
     "@storybook/react-vite": "^7.6.20",
     "@storybook/testing-library": "^0.2.2",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
+    "babel-jest": "^30.0.2",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^30.0.3",
+    "jest-environment-jsdom": "^30.0.2",
+    "jest-transform-stub": "^2.0.0",
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-postcss": "^4.0.2",
     "standard-version": "^9.5.0",
-    "storybook": "^7.6.20"
+    "storybook": "^7.6.20",
+    "ts-jest": "^29.4.0"
   }
 }
