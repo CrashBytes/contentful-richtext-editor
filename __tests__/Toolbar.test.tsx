@@ -129,7 +129,8 @@ describe('ContentfulToolbar', () => {
     
     const embedButton = screen.getByText('+ Embed ▼');
     fireEvent.mouseEnter(embedButton.parentElement!);
-    await user.click(screen.getByText('Entry'));
+    // Fixed: Look for the actual text "📄 Entry" instead of just "Entry"
+    await user.click(screen.getByText('📄 Entry'));
     
     expect(onEmbedEntry).toHaveBeenCalled();
   });

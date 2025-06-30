@@ -3,13 +3,10 @@ export default {
   testEnvironment: 'jsdom',
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   
-  // Setup files - updated to use .cjs
   setupFilesAfterEnv: ['<rootDir>/jest.setup.cjs'],
   
-  // Module file extensions
   moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json', 'node'],
 
-  // Transform configuration
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       useESM: true,
@@ -21,13 +18,9 @@ export default {
     }],
   },
 
-  // Path mapping for @ imports
   moduleNameMapper: {
-    // CSS and asset imports
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '\\.(gif|ttf|eot|svg|png|jpg|jpeg|webp)$': 'jest-transform-stub',
-    
-    // @ path aliases
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@components/(.*)$': '<rootDir>/src/components/$1',
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
@@ -37,20 +30,19 @@ export default {
     '^@assets/(.*)$': '<rootDir>/src/assets/$1',
   },
 
-  // Test patterns
   testMatch: [
     '<rootDir>/__tests__/**/*.(ts|tsx)',
     '<rootDir>/src/**/*.(test|spec).(ts|tsx)'
   ],
 
-  // Coverage
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
     '!src/index.ts',
+    '!src/**/*.stories.{ts,tsx}',
+    '!src/testData/**/*',
   ],
 
-  // Ignore patterns
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',
     '<rootDir>/dist/',
@@ -63,4 +55,5 @@ export default {
 
   clearMocks: true,
   restoreMocks: true,
+  verbose: true,
 };

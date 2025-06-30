@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { ContentfulRichTextEditor } from '@/components/ContentfulEditor';
 import { BLOCKS } from '@contentful/rich-text-types';
 import type { Document } from '@contentful/rich-text-types';
+import '@testing-library/jest-dom';
 
 // Mock TipTap modules
 jest.mock('@tiptap/react', () => ({
@@ -41,7 +42,7 @@ jest.mock('@tiptap/extension-table-cell', () => ({
 
 jest.mock('@tiptap/extension-underline', () => 'Underline');
 
-jest.mock('../utils/contentfulTransform', () => ({
+jest.mock('@/utils/contentfulTransform', () => ({
   contentfulToTiptap: jest.fn((doc) => ({ type: 'doc', content: [] })),
   tiptapToContentful: jest.fn((content) => ({
     nodeType: 'document',
@@ -51,25 +52,45 @@ jest.mock('../utils/contentfulTransform', () => ({
 }));
 
 import { useEditor } from '@tiptap/react';
-import { contentfulToTiptap, tiptapToContentful } from '../utils/contentfulTransform';
+import { contentfulToTiptap, tiptapToContentful } from '@/utils/contentfulTransform';
 
 const mockUseEditor = useEditor as jest.MockedFunction<typeof useEditor>;
 const mockContentfulToTiptap = contentfulToTiptap as jest.MockedFunction<typeof contentfulToTiptap>;
 const mockTiptapToContentful = tiptapToContentful as jest.MockedFunction<typeof tiptapToContentful>;
 
 describe('ContentfulRichTextEditor', () => {
+  // Complete mock editor with all the methods the Toolbar needs
   const mockEditor = {
     commands: { setContent: jest.fn() },
     getJSON: jest.fn(() => ({ type: 'doc', content: [] })),
     chain: jest.fn(() => ({
       focus: jest.fn(() => ({
         insertContent: jest.fn(() => ({ run: jest.fn() })),
+        undo: jest.fn(() => ({ run: jest.fn() })),
+        redo: jest.fn(() => ({ run: jest.fn() })),
+        toggleBold: jest.fn(() => ({ run: jest.fn() })),
+        toggleItalic: jest.fn(() => ({ run: jest.fn() })),
+        toggleUnderline: jest.fn(() => ({ run: jest.fn() })),
+        setParagraph: jest.fn(() => ({ run: jest.fn() })),
+        toggleHeading: jest.fn(() => ({ run: jest.fn() })),
+        unsetLink: jest.fn(() => ({ run: jest.fn() })),
+        setLink: jest.fn(() => ({ run: jest.fn() })),
+        toggleBulletList: jest.fn(() => ({ run: jest.fn() })),
+        toggleOrderedList: jest.fn(() => ({ run: jest.fn() })),
+        toggleBlockquote: jest.fn(() => ({ run: jest.fn() })),
+        setHorizontalRule: jest.fn(() => ({ run: jest.fn() })),
+        insertTable: jest.fn(() => ({ run: jest.fn() })),
       })),
     })),
+    // Add all the methods that Toolbar component needs
+    isActive: jest.fn(),
+    can: jest.fn(() => ({ undo: () => true, redo: () => true })),
+    getAttributes: jest.fn(() => ({})),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockEditor.isActive.mockReturnValue(false);
     mockUseEditor.mockReturnValue(mockEditor as any);
   });
 
@@ -106,7 +127,8 @@ describe('ContentfulRichTextEditor', () => {
 
   it('applies custom className and theme', () => {
     render(<ContentfulRichTextEditor className="custom-class" theme="minimal" />);
-    const editor = screen.getByRole('generic');
+    // Use a more specific selector - find by class name instead of generic role
+    const editor = document.querySelector('.contentful-editor');
     expect(editor).toHaveClass('custom-class', 'contentful-editor--minimal');
   });
 
