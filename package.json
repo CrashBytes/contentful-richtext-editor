@@ -1,6 +1,6 @@
 {
   "name": "@crashbytes/contentful-richtext-editor",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A Tiptap-based rich text editor compatible with Contentful's rich text format",
   "type": "module",
   "main": "dist/index.js",
