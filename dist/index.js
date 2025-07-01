@@ -27705,13 +27705,11 @@ var createMockFieldConfig = function (options) {
 };
 
 var ContentfulRichTextEditor = function (_a) {
-    var initialValue = _a.initialValue, onChange = _a.onChange, onEmbedEntry = _a.onEmbedEntry, onEmbedAsset = _a.onEmbedAsset, onEmbedInlineEntry = _a.onEmbedInlineEntry, _b = _a.className, className = _b === void 0 ? '' : _b, _c = _a.readonly, readonly = _c === void 0 ? false : _c, _d = _a.placeholder, placeholder = _d === void 0 ? 'Start writing...' : _d, fieldConfiguration = _a.fieldConfiguration, _e = _a.disabledFeatures, disabledFeatures = _e === void 0 ? [] : _e, _f = _a.theme, theme = _f === void 0 ? 'contentful' : _f, _g = _a.availableHeadings, availableHeadings = _g === void 0 ? [1, 2, 3, 4, 5, 6] : _g, _h = _a.availableMarks, availableMarks = _h === void 0 ? ['bold', 'italic', 'underline'] : _h;
-    // Parse Contentful field configuration to determine available features
+    var initialValue = _a.initialValue, onChange = _a.onChange, onEmbedEntry = _a.onEmbedEntry, onEmbedAsset = _a.onEmbedAsset, onEmbedInlineEntry = _a.onEmbedInlineEntry, _b = _a.className, className = _b === void 0 ? '' : _b, _c = _a.readonly, readonly = _c === void 0 ? false : _c, _d = _a.placeholder, placeholder = _d === void 0 ? 'Start writing...' : _d, fieldConfiguration = _a.fieldConfiguration, _e = _a.disabledFeatures, disabledFeatures = _e === void 0 ? [] : _e, _f = _a.theme, theme = _f === void 0 ? 'contentful' : _f, _g = _a.availableHeadings, availableHeadings = _g === void 0 ? [1, 2, 3, 4, 5, 6] : _g, _h = _a.availableMarks, availableMarks = _h === void 0 ? ['bold', 'italic', 'underline'] : _h, _j = _a.showBorder, showBorder = _j === void 0 ? true : _j;
     var editorConfig = React.useMemo(function () {
         if (fieldConfiguration) {
             return parseContentfulFieldConfig(fieldConfiguration);
         }
-        // Fallback to manual configuration
         var disabled = [];
         if (!availableMarks.includes('bold'))
             disabled.push('bold');
@@ -27733,10 +27731,8 @@ var ContentfulRichTextEditor = function (_a) {
             allowLists: !disabledFeatures.includes('lists'),
         };
     }, [fieldConfiguration, disabledFeatures, availableHeadings, availableMarks]);
-    // Build extensions array based on configuration
     var extensions = React.useMemo(function () {
         var exts = [];
-        // Add StarterKit with configuration
         exts.push(StarterKit.configure({
             heading: editorConfig.availableHeadings.length > 0 ? {
                 levels: editorConfig.availableHeadings,
@@ -27759,11 +27755,9 @@ var ContentfulRichTextEditor = function (_a) {
                 },
             } : false,
         }));
-        // Add underline extension only if it's in availableMarks
         if (editorConfig.availableMarks.includes('underline')) {
             exts.push(Underline);
         }
-        // Add link extension only if hyperlinks are allowed
         if (editorConfig.allowHyperlinks) {
             exts.push(Link.configure({
                 openOnClick: false,
@@ -27773,7 +27767,6 @@ var ContentfulRichTextEditor = function (_a) {
                 },
             }));
         }
-        // Add table extensions only if tables are allowed
         if (editorConfig.allowTables) {
             exts.push(Table.configure({
                 resizable: true,
@@ -27819,7 +27812,6 @@ var ContentfulRichTextEditor = function (_a) {
             }
         },
     });
-    // Update editor content when initialValue changes
     React.useEffect(function () {
         if (editor && initialValue) {
             var tiptapContent = contentfulToTiptap(initialValue);
@@ -27923,10 +27915,16 @@ var ContentfulRichTextEditor = function (_a) {
             }
         });
     }); }, [onEmbedInlineEntry, editor, editorConfig.allowInlineEntries]);
+    var editorClass = [
+        'contentful-editor',
+        "contentful-editor--".concat(theme),
+        !showBorder ? 'contentful-editor--borderless' : '',
+        className,
+    ].filter(Boolean).join(' ');
     if (!editor) {
         return (jsxRuntime.jsx("div", { className: "contentful-editor contentful-editor--loading ".concat(className), children: jsxRuntime.jsx("div", { className: "contentful-editor__loading", children: "Loading editor..." }) }));
     }
-    return (jsxRuntime.jsxs("div", { className: "contentful-editor contentful-editor--".concat(theme, " ").concat(className), children: [!readonly && (jsxRuntime.jsx(ContentfulToolbar, { editor: editor, onEmbedEntry: editorConfig.allowEmbeddedEntries ? handleEmbedEntry : undefined, onEmbedAsset: editorConfig.allowEmbeddedAssets ? handleEmbedAsset : undefined, onEmbedInlineEntry: editorConfig.allowInlineEntries ? handleEmbedInlineEntry : undefined, disabledFeatures: editorConfig.disabledFeatures, availableHeadings: editorConfig.availableHeadings, availableMarks: editorConfig.availableMarks, allowHyperlinks: editorConfig.allowHyperlinks })), jsxRuntime.jsx("div", { className: "contentful-editor__content-wrapper", children: jsxRuntime.jsx(EditorContent, { editor: editor, className: "contentful-editor__content" }) })] }));
+    return (jsxRuntime.jsxs("div", { className: editorClass, children: [!readonly && (jsxRuntime.jsx(ContentfulToolbar, { editor: editor, onEmbedEntry: editorConfig.allowEmbeddedEntries ? handleEmbedEntry : undefined, onEmbedAsset: editorConfig.allowEmbeddedAssets ? handleEmbedAsset : undefined, onEmbedInlineEntry: editorConfig.allowInlineEntries ? handleEmbedInlineEntry : undefined, disabledFeatures: editorConfig.disabledFeatures, availableHeadings: editorConfig.availableHeadings, availableMarks: editorConfig.availableMarks, allowHyperlinks: editorConfig.allowHyperlinks })), jsxRuntime.jsx("div", { className: "contentful-editor__content-wrapper", children: jsxRuntime.jsx(EditorContent, { editor: editor, className: "contentful-editor__content", "data-testid": "editor-content" }) })] }));
 };
 
 exports.BLOCKS = distExports.BLOCKS;

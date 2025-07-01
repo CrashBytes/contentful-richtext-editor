@@ -2,9 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### [2.0.1](https://github.com/your-org/contentful-richtext-editor/compare/v2.0.0...v2.0.1) (2025-07-01)
+### [1.0.11](https://github.com/CrashBytes/contentful-richtext-editor/compare/v1.0.10...v1.0.11) (2025-07-01)
 
-## [2.0.0] - 2024-01-15
+### Added
+- 🎨 Optional border control with `showBorder` prop (defaults to `true` for backward compatibility)
+
+### Fixed
+- Improved styling flexibility for borderless editor layouts
+
+
+## [1.0.10] - 2024-01-15
 
 ### Added
 - 🔄 Automatic configuration from Contentful field settings
