@@ -1,12 +1,10 @@
 
-// Update the import path to the correct module where these functions are exported
 import { 
     contentfulToTiptap, 
     tiptapToContentful, 
     validateContentfulDocument, 
     createEmptyDocument 
 } from '@/utils/contentfulTransform';
-// If the correct path is different, update it accordingly.
 import { Document, BLOCKS, MARKS, INLINES } from '@contentful/rich-text-types';
 
 describe('contentfulTransform', () => {

@@ -4,6 +4,77 @@ var jsxRuntime = require('react/jsx-runtime');
 var React = require('react');
 var ReactDOM = require('react-dom');
 
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise, SuppressedError, Symbol, Iterator */
+
+
+var __assign = function() {
+    __assign = Object.assign || function __assign(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+
+function __awaiter(thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}
+
+function __generator(thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+}
+
+typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
+    var e = new Error(message);
+    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
+};
+
 // ::- Persistent data structure representing an ordered mapping from
 // strings to values, with some convenient update methods.
 function OrderedMap(content) {
@@ -26531,12 +26602,13 @@ const Underline = Mark.create({
     },
 });
 
-const ContentfulToolbar = ({ editor, onEmbedEntry, onEmbedAsset, onEmbedInlineEntry, disabledFeatures = [], availableHeadings = [1, 2, 3, 4, 5, 6], availableMarks = ['bold', 'italic', 'underline'], allowHyperlinks = true }) => {
-    const [showLinkInput, setShowLinkInput] = React.useState(false);
-    const [linkUrl, setLinkUrl] = React.useState('');
-    const isDisabled = (feature) => disabledFeatures.includes(feature);
-    const isMarkAvailable = (mark) => availableMarks.includes(mark);
-    const handleHeadingChange = (level) => {
+var ContentfulToolbar = function (_a) {
+    var editor = _a.editor, onEmbedEntry = _a.onEmbedEntry, onEmbedAsset = _a.onEmbedAsset, onEmbedInlineEntry = _a.onEmbedInlineEntry, _b = _a.disabledFeatures, disabledFeatures = _b === void 0 ? [] : _b, _c = _a.availableHeadings, availableHeadings = _c === void 0 ? [1, 2, 3, 4, 5, 6] : _c, _d = _a.availableMarks, availableMarks = _d === void 0 ? ['bold', 'italic', 'underline'] : _d, _e = _a.allowHyperlinks, allowHyperlinks = _e === void 0 ? true : _e;
+    var _f = React.useState(false), showLinkInput = _f[0], setShowLinkInput = _f[1];
+    var _g = React.useState(''), linkUrl = _g[0], setLinkUrl = _g[1];
+    var isDisabled = function (feature) { return disabledFeatures.includes(feature); };
+    var isMarkAvailable = function (mark) { return availableMarks.includes(mark); };
+    var handleHeadingChange = function (level) {
         if (level === 0) {
             editor.chain().focus().setParagraph().run();
         }
@@ -26544,7 +26616,7 @@ const ContentfulToolbar = ({ editor, onEmbedEntry, onEmbedAsset, onEmbedInlineEn
             editor.chain().focus().toggleHeading({ level: level }).run();
         }
     };
-    const handleLinkToggle = () => {
+    var handleLinkToggle = function () {
         if (editor.isActive('link')) {
             editor.chain().focus().unsetLink().run();
         }
@@ -26553,41 +26625,42 @@ const ContentfulToolbar = ({ editor, onEmbedEntry, onEmbedAsset, onEmbedInlineEn
             setLinkUrl(editor.getAttributes('link').href || '');
         }
     };
-    const handleLinkSubmit = () => {
+    var handleLinkSubmit = function () {
         if (linkUrl) {
             editor.chain().focus().setLink({ href: linkUrl }).run();
         }
         setShowLinkInput(false);
         setLinkUrl('');
     };
-    const handleLinkCancel = () => {
+    var handleLinkCancel = function () {
         setShowLinkInput(false);
         setLinkUrl('');
     };
-    const insertTable = () => {
+    var insertTable = function () {
         editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
     };
-    const getActiveHeading = () => {
-        for (const level of availableHeadings) {
-            if (editor.isActive('heading', { level })) {
-                return `Heading ${level}`;
+    var getActiveHeading = function () {
+        for (var _i = 0, availableHeadings_1 = availableHeadings; _i < availableHeadings_1.length; _i++) {
+            var level = availableHeadings_1[_i];
+            if (editor.isActive('heading', { level: level })) {
+                return "Heading ".concat(level);
             }
         }
         return 'Normal text';
     };
-    const hasHeadings = !isDisabled('headings') && availableHeadings.length > 0;
-    const hasAnyEmbedOptions = onEmbedEntry || onEmbedAsset || onEmbedInlineEntry;
-    const hasAnyTextFormatting = availableMarks.some(mark => !isDisabled(mark) && isMarkAvailable(mark));
-    return (jsxRuntime.jsxs("div", { className: "contentful-toolbar", children: [jsxRuntime.jsxs("div", { className: "contentful-toolbar__group", children: [hasHeadings && (jsxRuntime.jsxs("select", { className: "contentful-toolbar__select", value: getActiveHeading(), onChange: (e) => {
-                            const value = e.target.value;
+    var hasHeadings = !isDisabled('headings') && availableHeadings.length > 0;
+    var hasAnyEmbedOptions = onEmbedEntry || onEmbedAsset || onEmbedInlineEntry;
+    var hasAnyTextFormatting = availableMarks.some(function (mark) { return !isDisabled(mark) && isMarkAvailable(mark); });
+    return (jsxRuntime.jsxs("div", { className: "contentful-toolbar", children: [jsxRuntime.jsxs("div", { className: "contentful-toolbar__group", children: [hasHeadings && (jsxRuntime.jsxs("select", { className: "contentful-toolbar__select", value: getActiveHeading(), onChange: function (e) {
+                            var value = e.target.value;
                             if (value === 'Normal text') {
                                 handleHeadingChange(0);
                             }
                             else {
-                                const level = parseInt(value.replace('Heading ', ''));
+                                var level = parseInt(value.replace('Heading ', ''));
                                 handleHeadingChange(level);
                             }
-                        }, children: [jsxRuntime.jsx("option", { value: "Normal text", children: "Normal text" }), availableHeadings.map(level => (jsxRuntime.jsxs("option", { value: `Heading ${level}`, children: ["Heading ", level] }, level)))] })), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: () => editor.chain().focus().undo().run(), disabled: !editor.can().undo(), title: "Undo", children: "\u21B6" }), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: () => editor.chain().focus().redo().run(), disabled: !editor.can().redo(), title: "Redo", children: "\u21B7" })] }), (hasAnyTextFormatting || allowHyperlinks) && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("div", { className: "contentful-toolbar__separator" }), jsxRuntime.jsxs("div", { className: "contentful-toolbar__group", children: [!isDisabled('bold') && isMarkAvailable('bold') && (jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('bold') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleBold().run(), title: "Bold", children: jsxRuntime.jsx("strong", { children: "B" }) })), !isDisabled('italic') && isMarkAvailable('italic') && (jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('italic') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleItalic().run(), title: "Italic", children: jsxRuntime.jsx("em", { children: "I" }) })), !isDisabled('underline') && isMarkAvailable('underline') && (jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('underline') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleUnderline().run(), title: "Underline", children: jsxRuntime.jsx("u", { children: "U" }) })), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", title: "More formatting options", children: "\u22EF" }), !isDisabled('link') && allowHyperlinks && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('link') ? 'contentful-toolbar__button--active' : ''}`, onClick: handleLinkToggle, title: "Link", children: "\uD83D\uDD17" }), showLinkInput && (jsxRuntime.jsxs("div", { className: "contentful-toolbar__link-input", children: [jsxRuntime.jsx("input", { type: "url", value: linkUrl, onChange: (e) => setLinkUrl(e.target.value), placeholder: "Enter URL", onKeyDown: (e) => {
+                        }, children: [jsxRuntime.jsx("option", { value: "Normal text", children: "Normal text" }), availableHeadings.map(function (level) { return (jsxRuntime.jsxs("option", { value: "Heading ".concat(level), children: ["Heading ", level] }, level)); })] })), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: function () { return editor.chain().focus().undo().run(); }, disabled: !editor.can().undo(), title: "Undo", children: "\u21B6" }), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: function () { return editor.chain().focus().redo().run(); }, disabled: !editor.can().redo(), title: "Redo", children: "\u21B7" })] }), (hasAnyTextFormatting || allowHyperlinks) && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("div", { className: "contentful-toolbar__separator" }), jsxRuntime.jsxs("div", { className: "contentful-toolbar__group", children: [!isDisabled('bold') && isMarkAvailable('bold') && (jsxRuntime.jsx("button", { className: "contentful-toolbar__button ".concat(editor.isActive('bold') ? 'contentful-toolbar__button--active' : ''), onClick: function () { return editor.chain().focus().toggleBold().run(); }, title: "Bold", children: jsxRuntime.jsx("strong", { children: "B" }) })), !isDisabled('italic') && isMarkAvailable('italic') && (jsxRuntime.jsx("button", { className: "contentful-toolbar__button ".concat(editor.isActive('italic') ? 'contentful-toolbar__button--active' : ''), onClick: function () { return editor.chain().focus().toggleItalic().run(); }, title: "Italic", children: jsxRuntime.jsx("em", { children: "I" }) })), !isDisabled('underline') && isMarkAvailable('underline') && (jsxRuntime.jsx("button", { className: "contentful-toolbar__button ".concat(editor.isActive('underline') ? 'contentful-toolbar__button--active' : ''), onClick: function () { return editor.chain().focus().toggleUnderline().run(); }, title: "Underline", children: jsxRuntime.jsx("u", { children: "U" }) })), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", title: "More formatting options", children: "\u22EF" }), !isDisabled('link') && allowHyperlinks && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("button", { className: "contentful-toolbar__button ".concat(editor.isActive('link') ? 'contentful-toolbar__button--active' : ''), onClick: handleLinkToggle, title: "Link", children: "\uD83D\uDD17" }), showLinkInput && (jsxRuntime.jsxs("div", { className: "contentful-toolbar__link-input", children: [jsxRuntime.jsx("input", { type: "url", value: linkUrl, onChange: function (e) { return setLinkUrl(e.target.value); }, placeholder: "Enter URL", onKeyDown: function (e) {
                                                     if (e.key === 'Enter') {
                                                         e.preventDefault();
                                                         handleLinkSubmit();
@@ -26596,7 +26669,7 @@ const ContentfulToolbar = ({ editor, onEmbedEntry, onEmbedAsset, onEmbedInlineEn
                                                         e.preventDefault();
                                                         handleLinkCancel();
                                                     }
-                                                }, autoFocus: true }), jsxRuntime.jsx("button", { onClick: handleLinkSubmit, title: "Apply link", children: "\u2713" }), jsxRuntime.jsx("button", { onClick: handleLinkCancel, title: "Cancel", children: "\u2717" })] }))] }))] })] })), (!isDisabled('lists') || !isDisabled('quote') || !isDisabled('table')) && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("div", { className: "contentful-toolbar__separator" }), jsxRuntime.jsxs("div", { className: "contentful-toolbar__group", children: [!isDisabled('lists') && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('bulletList') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleBulletList().run(), title: "Bullet List", children: "\u2022 \u2261" }), jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('orderedList') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleOrderedList().run(), title: "Numbered List", children: "1. \u2261" })] })), !isDisabled('quote') && (jsxRuntime.jsx("button", { className: `contentful-toolbar__button ${editor.isActive('blockquote') ? 'contentful-toolbar__button--active' : ''}`, onClick: () => editor.chain().focus().toggleBlockquote().run(), title: "Quote", children: "\"" })), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: () => editor.chain().focus().setHorizontalRule().run(), title: "Horizontal Rule", children: "\u2014" }), !isDisabled('table') && (jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: insertTable, title: "Insert Table", children: "\u229E" }))] })] })), hasAnyEmbedOptions && !isDisabled('embed') && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("div", { className: "contentful-toolbar__separator" }), jsxRuntime.jsx("div", { className: "contentful-toolbar__group contentful-toolbar__group--right", children: jsxRuntime.jsxs("div", { className: "contentful-toolbar__embed-dropdown", children: [jsxRuntime.jsx("button", { className: "contentful-toolbar__embed-button", children: "+ Embed \u25BC" }), jsxRuntime.jsxs("div", { className: "contentful-toolbar__embed-menu", children: [onEmbedEntry && (jsxRuntime.jsx("button", { className: "contentful-toolbar__embed-option", onClick: onEmbedEntry, children: "\uD83D\uDCC4 Entry" })), onEmbedInlineEntry && (jsxRuntime.jsx("button", { className: "contentful-toolbar__embed-option", onClick: onEmbedInlineEntry, children: "\uD83D\uDCDD Inline Entry" })), onEmbedAsset && (jsxRuntime.jsx("button", { className: "contentful-toolbar__embed-option", onClick: onEmbedAsset, children: "\uD83D\uDDBC\uFE0F Media" }))] })] }) })] }))] }));
+                                                }, autoFocus: true }), jsxRuntime.jsx("button", { onClick: handleLinkSubmit, title: "Apply link", children: "\u2713" }), jsxRuntime.jsx("button", { onClick: handleLinkCancel, title: "Cancel", children: "\u2717" })] }))] }))] })] })), (!isDisabled('lists') || !isDisabled('quote') || !isDisabled('table')) && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("div", { className: "contentful-toolbar__separator" }), jsxRuntime.jsxs("div", { className: "contentful-toolbar__group", children: [!isDisabled('lists') && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("button", { className: "contentful-toolbar__button ".concat(editor.isActive('bulletList') ? 'contentful-toolbar__button--active' : ''), onClick: function () { return editor.chain().focus().toggleBulletList().run(); }, title: "Bullet List", children: "\u2022 \u2261" }), jsxRuntime.jsx("button", { className: "contentful-toolbar__button ".concat(editor.isActive('orderedList') ? 'contentful-toolbar__button--active' : ''), onClick: function () { return editor.chain().focus().toggleOrderedList().run(); }, title: "Numbered List", children: "1. \u2261" })] })), !isDisabled('quote') && (jsxRuntime.jsx("button", { className: "contentful-toolbar__button ".concat(editor.isActive('blockquote') ? 'contentful-toolbar__button--active' : ''), onClick: function () { return editor.chain().focus().toggleBlockquote().run(); }, title: "Quote", children: "\"" })), jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: function () { return editor.chain().focus().setHorizontalRule().run(); }, title: "Horizontal Rule", children: "\u2014" }), !isDisabled('table') && (jsxRuntime.jsx("button", { className: "contentful-toolbar__button", onClick: insertTable, title: "Insert Table", children: "\u229E" }))] })] })), hasAnyEmbedOptions && !isDisabled('embed') && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("div", { className: "contentful-toolbar__separator" }), jsxRuntime.jsx("div", { className: "contentful-toolbar__group contentful-toolbar__group--right", children: jsxRuntime.jsxs("div", { className: "contentful-toolbar__embed-dropdown", children: [jsxRuntime.jsx("button", { className: "contentful-toolbar__embed-button", children: "+ Embed \u25BC" }), jsxRuntime.jsxs("div", { className: "contentful-toolbar__embed-menu", children: [onEmbedEntry && (jsxRuntime.jsx("button", { className: "contentful-toolbar__embed-option", onClick: onEmbedEntry, children: "\uD83D\uDCC4 Entry" })), onEmbedInlineEntry && (jsxRuntime.jsx("button", { className: "contentful-toolbar__embed-option", onClick: onEmbedInlineEntry, children: "\uD83D\uDCDD Inline Entry" })), onEmbedAsset && (jsxRuntime.jsx("button", { className: "contentful-toolbar__embed-option", onClick: onEmbedAsset, children: "\uD83D\uDDBC\uFE0F Media" }))] })] }) })] }))] }));
 };
 
 var dist = {};
@@ -27029,75 +27102,75 @@ var distExports = requireDist();
 /**
  * Converts a Contentful Rich Text Document to Tiptap JSON format
  */
-const contentfulToTiptap = (document) => {
-    const convertNode = (node) => {
+var contentfulToTiptap = function (document) {
+    var convertNode = function (node) {
         var _a, _b, _c, _d, _e, _f, _g;
         switch (node.nodeType) {
             case distExports.BLOCKS.DOCUMENT:
                 return {
                     type: 'doc',
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.PARAGRAPH:
                 return {
                     type: 'paragraph',
-                    content: node.content ? node.content.map(child => convertNode(child)).flat() : [],
+                    content: node.content ? node.content.map(function (child) { return convertNode(child); }).flat() : [],
                 };
             case distExports.BLOCKS.HEADING_1:
                 return {
                     type: 'heading',
                     attrs: { level: 1 },
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.HEADING_2:
                 return {
                     type: 'heading',
                     attrs: { level: 2 },
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.HEADING_3:
                 return {
                     type: 'heading',
                     attrs: { level: 3 },
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.HEADING_4:
                 return {
                     type: 'heading',
                     attrs: { level: 4 },
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.HEADING_5:
                 return {
                     type: 'heading',
                     attrs: { level: 5 },
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.HEADING_6:
                 return {
                     type: 'heading',
                     attrs: { level: 6 },
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.UL_LIST:
                 return {
                     type: 'bulletList',
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.OL_LIST:
                 return {
                     type: 'orderedList',
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.LIST_ITEM:
                 return {
                     type: 'listItem',
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.QUOTE:
                 return {
                     type: 'blockquote',
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.HR:
                 return {
@@ -27106,27 +27179,29 @@ const contentfulToTiptap = (document) => {
             case distExports.BLOCKS.TABLE:
                 return {
                     type: 'table',
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.TABLE_ROW:
                 return {
                     type: 'tableRow',
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.TABLE_CELL:
                 return {
                     type: 'tableCell',
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.BLOCKS.TABLE_HEADER_CELL:
                 return {
                     type: 'tableHeader',
-                    content: node.content.map(child => convertNode(child)).flat(),
+                    content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
             case distExports.INLINES.HYPERLINK:
                 return {
                     type: 'text',
-                    text: node.content.map(child => child.nodeType === 'text' ? child.value : '').join(''),
+                    text: node.content.map(function (child) {
+                        return child.nodeType === 'text' ? child.value : '';
+                    }).join(''),
                     marks: [
                         {
                             type: 'link',
@@ -27138,7 +27213,7 @@ const contentfulToTiptap = (document) => {
                 // Inline embedded entry
                 return {
                     type: 'text',
-                    text: `[Inline Entry: ${((_b = (_a = node.data.target) === null || _a === void 0 ? void 0 : _a.sys) === null || _b === void 0 ? void 0 : _b.id) || 'Unknown'}]`,
+                    text: "[Inline Entry: ".concat(((_b = (_a = node.data.target) === null || _a === void 0 ? void 0 : _a.sys) === null || _b === void 0 ? void 0 : _b.id) || 'Unknown', "]"),
                     marks: [{ type: 'bold' }],
                 };
             case distExports.BLOCKS.EMBEDDED_ENTRY:
@@ -27147,7 +27222,7 @@ const contentfulToTiptap = (document) => {
                     content: [
                         {
                             type: 'text',
-                            text: `[Embedded Entry: ${((_d = (_c = node.data.target) === null || _c === void 0 ? void 0 : _c.sys) === null || _d === void 0 ? void 0 : _d.id) || 'Unknown'}]`,
+                            text: "[Embedded Entry: ".concat(((_d = (_c = node.data.target) === null || _c === void 0 ? void 0 : _c.sys) === null || _d === void 0 ? void 0 : _d.id) || 'Unknown', "]"),
                             marks: [{ type: 'bold' }],
                         },
                     ],
@@ -27158,14 +27233,14 @@ const contentfulToTiptap = (document) => {
                     content: [
                         {
                             type: 'text',
-                            text: `[Embedded Asset: ${((_f = (_e = node.data.target) === null || _e === void 0 ? void 0 : _e.sys) === null || _f === void 0 ? void 0 : _f.id) || 'Unknown'}]`,
+                            text: "[Embedded Asset: ".concat(((_f = (_e = node.data.target) === null || _e === void 0 ? void 0 : _e.sys) === null || _f === void 0 ? void 0 : _f.id) || 'Unknown', "]"),
                             marks: [{ type: 'bold' }],
                         },
                     ],
                 };
             case 'text':
-                const textNode = node;
-                const marks = ((_g = textNode.marks) === null || _g === void 0 ? void 0 : _g.map(mark => {
+                var textNode = node;
+                var marks = ((_g = textNode.marks) === null || _g === void 0 ? void 0 : _g.map(function (mark) {
                     switch (mark.type) {
                         case distExports.MARKS.BOLD:
                             return { type: 'bold' };
@@ -27178,14 +27253,14 @@ const contentfulToTiptap = (document) => {
                         default:
                             return null;
                     }
-                }).filter((mark) => mark !== null)) || [];
+                }).filter(function (mark) { return mark !== null; })) || [];
                 return {
                     type: 'text',
                     text: textNode.value,
                     marks: marks.length > 0 ? marks : undefined,
                 };
             default:
-                console.warn(`Unknown Contentful node type: ${node.nodeType}`);
+                console.warn("Unknown Contentful node type: ".concat(node.nodeType));
                 return {
                     type: 'paragraph',
                     content: [],
@@ -27197,25 +27272,25 @@ const contentfulToTiptap = (document) => {
 /**
  * Converts Tiptap JSON format to Contentful Rich Text Document
  */
-const tiptapToContentful = (tiptapDoc) => {
-    const convertNode = (node) => {
+var tiptapToContentful = function (tiptapDoc) {
+    var convertNode = function (node) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
         switch (node.type) {
             case 'doc':
                 return {
                     nodeType: distExports.BLOCKS.DOCUMENT,
                     data: {},
-                    content: (_a = node.content) === null || _a === void 0 ? void 0 : _a.map((child) => convertNode(child)),
+                    content: (_a = node.content) === null || _a === void 0 ? void 0 : _a.map(function (child) { return convertNode(child); }),
                 };
             case 'paragraph':
                 return {
                     nodeType: distExports.BLOCKS.PARAGRAPH,
                     data: {},
-                    content: (_b = node.content) === null || _b === void 0 ? void 0 : _b.map((child) => convertNode(child)),
+                    content: (_b = node.content) === null || _b === void 0 ? void 0 : _b.map(function (child) { return convertNode(child); }),
                 };
             case 'heading':
-                const level = ((_c = node.attrs) === null || _c === void 0 ? void 0 : _c.level) || 1;
-                const headingTypes = {
+                var level = ((_c = node.attrs) === null || _c === void 0 ? void 0 : _c.level) || 1;
+                var headingTypes = {
                     1: distExports.BLOCKS.HEADING_1,
                     2: distExports.BLOCKS.HEADING_2,
                     3: distExports.BLOCKS.HEADING_3,
@@ -27223,35 +27298,35 @@ const tiptapToContentful = (tiptapDoc) => {
                     5: distExports.BLOCKS.HEADING_5,
                     6: distExports.BLOCKS.HEADING_6,
                 };
-                const headingType = headingTypes[level] || distExports.BLOCKS.HEADING_1;
+                var headingType = headingTypes[level] || distExports.BLOCKS.HEADING_1;
                 return {
                     nodeType: headingType,
                     data: {},
-                    content: (_d = node.content) === null || _d === void 0 ? void 0 : _d.map((child) => convertNode(child)),
+                    content: (_d = node.content) === null || _d === void 0 ? void 0 : _d.map(function (child) { return convertNode(child); }),
                 };
             case 'bulletList':
                 return {
                     nodeType: distExports.BLOCKS.UL_LIST,
                     data: {},
-                    content: (_e = node.content) === null || _e === void 0 ? void 0 : _e.map((child) => convertNode(child)),
+                    content: (_e = node.content) === null || _e === void 0 ? void 0 : _e.map(function (child) { return convertNode(child); }),
                 };
             case 'orderedList':
                 return {
                     nodeType: distExports.BLOCKS.OL_LIST,
                     data: {},
-                    content: (_f = node.content) === null || _f === void 0 ? void 0 : _f.map((child) => convertNode(child)),
+                    content: (_f = node.content) === null || _f === void 0 ? void 0 : _f.map(function (child) { return convertNode(child); }),
                 };
             case 'listItem':
                 return {
                     nodeType: distExports.BLOCKS.LIST_ITEM,
                     data: {},
-                    content: (_g = node.content) === null || _g === void 0 ? void 0 : _g.map((child) => convertNode(child)),
+                    content: (_g = node.content) === null || _g === void 0 ? void 0 : _g.map(function (child) { return convertNode(child); }),
                 };
             case 'blockquote':
                 return {
                     nodeType: distExports.BLOCKS.QUOTE,
                     data: {},
-                    content: (_h = node.content) === null || _h === void 0 ? void 0 : _h.map((child) => convertNode(child)),
+                    content: (_h = node.content) === null || _h === void 0 ? void 0 : _h.map(function (child) { return convertNode(child); }),
                 };
             case 'horizontalRule':
                 return {
@@ -27263,28 +27338,28 @@ const tiptapToContentful = (tiptapDoc) => {
                 return {
                     nodeType: distExports.BLOCKS.TABLE,
                     data: {},
-                    content: (_j = node.content) === null || _j === void 0 ? void 0 : _j.map((child) => convertNode(child)),
+                    content: (_j = node.content) === null || _j === void 0 ? void 0 : _j.map(function (child) { return convertNode(child); }),
                 };
             case 'tableRow':
                 return {
                     nodeType: distExports.BLOCKS.TABLE_ROW,
                     data: {},
-                    content: (_k = node.content) === null || _k === void 0 ? void 0 : _k.map((child) => convertNode(child)),
+                    content: (_k = node.content) === null || _k === void 0 ? void 0 : _k.map(function (child) { return convertNode(child); }),
                 };
             case 'tableCell':
                 return {
                     nodeType: distExports.BLOCKS.TABLE_CELL,
                     data: {},
-                    content: (_l = node.content) === null || _l === void 0 ? void 0 : _l.map((child) => convertNode(child)),
+                    content: (_l = node.content) === null || _l === void 0 ? void 0 : _l.map(function (child) { return convertNode(child); }),
                 };
             case 'tableHeader':
                 return {
                     nodeType: distExports.BLOCKS.TABLE_HEADER_CELL,
                     data: {},
-                    content: (_m = node.content) === null || _m === void 0 ? void 0 : _m.map((child) => convertNode(child)),
+                    content: (_m = node.content) === null || _m === void 0 ? void 0 : _m.map(function (child) { return convertNode(child); }),
                 };
             case 'text':
-                const marks = ((_o = node.marks) === null || _o === void 0 ? void 0 : _o.map((mark) => {
+                var marks = ((_o = node.marks) === null || _o === void 0 ? void 0 : _o.map(function (mark) {
                     switch (mark.type) {
                         case 'bold':
                             return { type: distExports.MARKS.BOLD };
@@ -27301,7 +27376,7 @@ const tiptapToContentful = (tiptapDoc) => {
                     }
                 }).filter(Boolean)) || [];
                 // Check if this text has a link mark
-                const linkMark = (_p = node.marks) === null || _p === void 0 ? void 0 : _p.find((mark) => mark.type === 'link');
+                var linkMark = (_p = node.marks) === null || _p === void 0 ? void 0 : _p.find(function (mark) { return mark.type === 'link'; });
                 if (linkMark) {
                     return {
                         nodeType: distExports.INLINES.HYPERLINK,
@@ -27319,11 +27394,11 @@ const tiptapToContentful = (tiptapDoc) => {
                     };
                 }
                 // Check if this is an inline entry (by looking for specific patterns)
-                const isInlineEntry = node.text && node.text.startsWith('[Inline Entry:');
-                if (isInlineEntry && ((_r = node.marks) === null || _r === void 0 ? void 0 : _r.some((mark) => mark.type === 'bold'))) {
+                var isInlineEntry = node.text && node.text.startsWith('[Inline Entry:');
+                if (isInlineEntry && ((_r = node.marks) === null || _r === void 0 ? void 0 : _r.some(function (mark) { return mark.type === 'bold'; }))) {
                     // Extract entry ID from the text
-                    const match = node.text.match(/\[Inline Entry:\s*([^\]]+)\]/);
-                    const entryId = match ? match[1].trim() : 'Unknown';
+                    var match = node.text.match(/\[Inline Entry:\s*([^\]]+)\]/);
+                    var entryId = match ? match[1].trim() : 'Unknown';
                     return {
                         nodeType: distExports.INLINES.EMBEDDED_ENTRY,
                         data: {
@@ -27345,7 +27420,7 @@ const tiptapToContentful = (tiptapDoc) => {
                     data: {},
                 };
             default:
-                console.warn(`Unknown Tiptap node type: ${node.type}`);
+                console.warn("Unknown Tiptap node type: ".concat(node.type));
                 return {
                     nodeType: distExports.BLOCKS.PARAGRAPH,
                     data: {},
@@ -27358,7 +27433,7 @@ const tiptapToContentful = (tiptapDoc) => {
 /**
  * Validates if a Contentful document is properly formatted
  */
-const validateContentfulDocument = (document) => {
+var validateContentfulDocument = function (document) {
     if (!document || typeof document !== 'object') {
         return false;
     }
@@ -27373,7 +27448,7 @@ const validateContentfulDocument = (document) => {
 /**
  * Creates an empty Contentful document
  */
-const createEmptyDocument = () => ({
+var createEmptyDocument = function () { return ({
     nodeType: distExports.BLOCKS.DOCUMENT,
     data: {},
     content: [
@@ -27383,12 +27458,12 @@ const createEmptyDocument = () => ({
             content: [],
         },
     ],
-});
+}); };
 /**
  * Sanitizes a Contentful document by removing invalid nodes/marks based on configuration
  */
-const sanitizeContentfulDocument = (document, allowedNodeTypes, allowedMarks) => {
-    const sanitizeNode = (node) => {
+var sanitizeContentfulDocument = function (document, allowedNodeTypes, allowedMarks) {
+    var sanitizeNode = function (node) {
         var _a, _b;
         // Check if node type is allowed
         if (!allowedNodeTypes.includes(node.nodeType)) {
@@ -27400,41 +27475,35 @@ const sanitizeContentfulDocument = (document, allowedNodeTypes, allowedMarks) =>
                 return {
                     nodeType: distExports.BLOCKS.PARAGRAPH,
                     data: {},
-                    content: (_a = node.content) === null || _a === void 0 ? void 0 : _a.map(child => sanitizeNode(child)).filter(Boolean),
+                    content: (_a = node.content) === null || _a === void 0 ? void 0 : _a.map(function (child) { return sanitizeNode(child); }).filter(Boolean),
                 };
             }
             return null;
         }
         if (node.nodeType === 'text') {
-            const textNode = node;
-            const sanitizedMarks = ((_b = textNode.marks) === null || _b === void 0 ? void 0 : _b.filter(mark => allowedMarks.includes(mark.type))) || [];
-            return {
-                ...textNode,
-                marks: sanitizedMarks,
-            };
+            var textNode = node;
+            var sanitizedMarks = ((_b = textNode.marks) === null || _b === void 0 ? void 0 : _b.filter(function (mark) { return allowedMarks.includes(mark.type); })) || [];
+            return __assign(__assign({}, textNode), { marks: sanitizedMarks });
         }
         if ('content' in node && node.content) {
-            const sanitizedContent = node.content.map(child => sanitizeNode(child)).filter(Boolean);
-            return {
-                ...node,
-                content: sanitizedContent,
-            };
+            var sanitizedContent = node.content.map(function (child) { return sanitizeNode(child); }).filter(Boolean);
+            return __assign(__assign({}, node), { content: sanitizedContent });
         }
         return node;
     };
-    const sanitized = sanitizeNode(document);
+    var sanitized = sanitizeNode(document);
     return sanitized;
 };
 /**
  * Extracts plain text from a Contentful document
  */
-const extractPlainText = (document) => {
-    const extractFromNode = (node) => {
+var extractPlainText = function (document) {
+    var extractFromNode = function (node) {
         if (node.nodeType === 'text') {
             return node.value;
         }
         if ('content' in node && node.content) {
-            return node.content.map(child => extractFromNode(child)).join('');
+            return node.content.map(function (child) { return extractFromNode(child); }).join('');
         }
         return '';
     };
@@ -27443,44 +27512,44 @@ const extractPlainText = (document) => {
 /**
  * Counts words in a Contentful document
  */
-const countWords = (document) => {
-    const plainText = extractPlainText(document);
-    const words = plainText.trim().split(/\s+/).filter(word => word.length > 0);
+var countWords = function (document) {
+    var plainText = extractPlainText(document);
+    var words = plainText.trim().split(/\s+/).filter(function (word) { return word.length > 0; });
     return words.length;
 };
 /**
  * Finds all embedded entries/assets in a document
  */
-const findEmbeddedContent = (document) => {
-    const entries = [];
-    const assets = [];
-    const inlineEntries = [];
-    const searchNode = (node) => {
+var findEmbeddedContent = function (document) {
+    var entries = [];
+    var assets = [];
+    var inlineEntries = [];
+    var searchNode = function (node) {
         var _a, _b, _c, _d, _e, _f;
         if (node.nodeType === distExports.BLOCKS.EMBEDDED_ENTRY) {
-            const entryId = (_b = (_a = node.data.target) === null || _a === void 0 ? void 0 : _a.sys) === null || _b === void 0 ? void 0 : _b.id;
+            var entryId = (_b = (_a = node.data.target) === null || _a === void 0 ? void 0 : _a.sys) === null || _b === void 0 ? void 0 : _b.id;
             if (entryId)
                 entries.push(entryId);
         }
         else if (node.nodeType === distExports.BLOCKS.EMBEDDED_ASSET) {
-            const assetId = (_d = (_c = node.data.target) === null || _c === void 0 ? void 0 : _c.sys) === null || _d === void 0 ? void 0 : _d.id;
+            var assetId = (_d = (_c = node.data.target) === null || _c === void 0 ? void 0 : _c.sys) === null || _d === void 0 ? void 0 : _d.id;
             if (assetId)
                 assets.push(assetId);
         }
         else if (node.nodeType === distExports.INLINES.EMBEDDED_ENTRY) {
-            const entryId = (_f = (_e = node.data.target) === null || _e === void 0 ? void 0 : _e.sys) === null || _f === void 0 ? void 0 : _f.id;
+            var entryId = (_f = (_e = node.data.target) === null || _e === void 0 ? void 0 : _e.sys) === null || _f === void 0 ? void 0 : _f.id;
             if (entryId)
                 inlineEntries.push(entryId);
         }
         if ('content' in node && node.content) {
-            node.content.forEach(child => searchNode(child));
+            node.content.forEach(function (child) { return searchNode(child); });
         }
     };
     searchNode(document);
     return {
-        entries: [...new Set(entries)], // Remove duplicates
-        assets: [...new Set(assets)],
-        inlineEntries: [...new Set(inlineEntries)],
+        entries: Array.from(new Set(entries)), // Remove duplicates
+        assets: Array.from(new Set(assets)),
+        inlineEntries: Array.from(new Set(inlineEntries)),
     };
 };
 
@@ -27488,10 +27557,10 @@ const findEmbeddedContent = (document) => {
 /**
  * Parses Contentful field configuration to determine editor capabilities
  */
-const parseContentfulFieldConfig = (fieldConfiguration) => {
+var parseContentfulFieldConfig = function (fieldConfiguration) {
     var _a;
     // Default configuration when no field config is provided
-    const defaultConfig = {
+    var defaultConfig = {
         availableHeadings: [1, 2, 3, 4, 5, 6],
         availableMarks: ['bold', 'italic', 'underline'],
         disabledFeatures: [],
@@ -27506,11 +27575,11 @@ const parseContentfulFieldConfig = (fieldConfiguration) => {
     if (!((_a = fieldConfiguration === null || fieldConfiguration === void 0 ? void 0 : fieldConfiguration.validations) === null || _a === void 0 ? void 0 : _a[0])) {
         return defaultConfig;
     }
-    const validation = fieldConfiguration.validations[0];
-    const enabledMarks = validation.enabledMarks || [];
-    const enabledNodeTypes = validation.enabledNodeTypes || [];
+    var validation = fieldConfiguration.validations[0];
+    var enabledMarks = validation.enabledMarks || [];
+    var enabledNodeTypes = validation.enabledNodeTypes || [];
     // Parse available text marks
-    const marks = [];
+    var marks = [];
     if (enabledMarks.includes('bold'))
         marks.push('bold');
     if (enabledMarks.includes('italic'))
@@ -27518,7 +27587,7 @@ const parseContentfulFieldConfig = (fieldConfiguration) => {
     if (enabledMarks.includes('underline'))
         marks.push('underline');
     // Parse available heading levels
-    const headings = [];
+    var headings = [];
     if (enabledNodeTypes.includes('heading-1'))
         headings.push(1);
     if (enabledNodeTypes.includes('heading-2'))
@@ -27532,15 +27601,15 @@ const parseContentfulFieldConfig = (fieldConfiguration) => {
     if (enabledNodeTypes.includes('heading-6'))
         headings.push(6);
     // Parse other features
-    const allowHyperlinks = enabledNodeTypes.includes('hyperlink');
-    const allowEmbeddedEntries = enabledNodeTypes.includes('embedded-entry-block');
-    const allowEmbeddedAssets = enabledNodeTypes.includes('embedded-asset-block');
-    const allowInlineEntries = enabledNodeTypes.includes('embedded-entry-inline');
-    const allowTables = enabledNodeTypes.includes('table');
-    const allowQuotes = enabledNodeTypes.includes('blockquote') || enabledNodeTypes.includes('quote');
-    const allowLists = enabledNodeTypes.includes('unordered-list') || enabledNodeTypes.includes('ordered-list');
+    var allowHyperlinks = enabledNodeTypes.includes('hyperlink');
+    var allowEmbeddedEntries = enabledNodeTypes.includes('embedded-entry-block');
+    var allowEmbeddedAssets = enabledNodeTypes.includes('embedded-asset-block');
+    var allowInlineEntries = enabledNodeTypes.includes('embedded-entry-inline');
+    var allowTables = enabledNodeTypes.includes('table');
+    var allowQuotes = enabledNodeTypes.includes('blockquote') || enabledNodeTypes.includes('quote');
+    var allowLists = enabledNodeTypes.includes('unordered-list') || enabledNodeTypes.includes('ordered-list');
     // Build disabled features array
-    const disabled = [];
+    var disabled = [];
     if (!marks.includes('bold'))
         disabled.push('bold');
     if (!marks.includes('italic'))
@@ -27563,51 +27632,61 @@ const parseContentfulFieldConfig = (fieldConfiguration) => {
         availableHeadings: headings,
         availableMarks: marks,
         disabledFeatures: disabled,
-        allowHyperlinks,
-        allowEmbeddedEntries,
-        allowEmbeddedAssets,
-        allowInlineEntries,
-        allowTables,
-        allowQuotes,
-        allowLists,
+        allowHyperlinks: allowHyperlinks,
+        allowEmbeddedEntries: allowEmbeddedEntries,
+        allowEmbeddedAssets: allowEmbeddedAssets,
+        allowInlineEntries: allowInlineEntries,
+        allowTables: allowTables,
+        allowQuotes: allowQuotes,
+        allowLists: allowLists,
     };
 };
 /**
  * Helper function to fetch Contentful field configuration from Management API
  */
-const fetchContentfulFieldConfig = async (spaceId, contentTypeId, fieldId, accessToken) => {
-    try {
-        const response = await fetch(`https://api.contentful.com/spaces/${spaceId}/content_types/${contentTypeId}`, {
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/vnd.contentful.management.v1+json',
-            },
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch content type: ${response.status} ${response.statusText}`);
+var fetchContentfulFieldConfig = function (spaceId, contentTypeId, fieldId, accessToken) { return __awaiter(void 0, void 0, void 0, function () {
+    var response, contentType, field, error_1;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                _a.trys.push([0, 3, , 4]);
+                return [4 /*yield*/, fetch("https://api.contentful.com/spaces/".concat(spaceId, "/content_types/").concat(contentTypeId), {
+                        headers: {
+                            'Authorization': "Bearer ".concat(accessToken),
+                            'Content-Type': 'application/vnd.contentful.management.v1+json',
+                        },
+                    })];
+            case 1:
+                response = _a.sent();
+                if (!response.ok) {
+                    throw new Error("Failed to fetch content type: ".concat(response.status, " ").concat(response.statusText));
+                }
+                return [4 /*yield*/, response.json()];
+            case 2:
+                contentType = _a.sent();
+                field = contentType.fields.find(function (f) { return f.id === fieldId; });
+                if (!field || field.type !== 'RichText') {
+                    console.warn("Field \"".concat(fieldId, "\" not found or is not a RichText field"));
+                    return [2 /*return*/, null];
+                }
+                return [2 /*return*/, {
+                        validations: field.validations || [],
+                        settings: {
+                            helpText: field.helpText,
+                        },
+                    }];
+            case 3:
+                error_1 = _a.sent();
+                console.error('Error fetching Contentful field configuration:', error_1);
+                return [2 /*return*/, null];
+            case 4: return [2 /*return*/];
         }
-        const contentType = await response.json();
-        const field = contentType.fields.find((f) => f.id === fieldId);
-        if (!field || field.type !== 'RichText') {
-            console.warn(`Field "${fieldId}" not found or is not a RichText field`);
-            return null;
-        }
-        return {
-            validations: field.validations || [],
-            settings: {
-                helpText: field.helpText,
-            },
-        };
-    }
-    catch (error) {
-        console.error('Error fetching Contentful field configuration:', error);
-        return null;
-    }
-};
+    });
+}); };
 /**
  * Creates a mock field configuration for testing purposes
  */
-const createMockFieldConfig = (options) => {
+var createMockFieldConfig = function (options) {
     return {
         validations: [{
                 enabledMarks: options.enabledMarks || ['bold', 'italic'],
@@ -27625,24 +27704,25 @@ const createMockFieldConfig = (options) => {
     };
 };
 
-const ContentfulRichTextEditor = ({ initialValue, onChange, onEmbedEntry, onEmbedAsset, onEmbedInlineEntry, className = '', readonly = false, placeholder = 'Start writing...', fieldConfiguration, disabledFeatures = [], theme = 'contentful', availableHeadings = [1, 2, 3, 4, 5, 6], availableMarks = ['bold', 'italic', 'underline'] }) => {
+var ContentfulRichTextEditor = function (_a) {
+    var initialValue = _a.initialValue, onChange = _a.onChange, onEmbedEntry = _a.onEmbedEntry, onEmbedAsset = _a.onEmbedAsset, onEmbedInlineEntry = _a.onEmbedInlineEntry, _b = _a.className, className = _b === void 0 ? '' : _b, _c = _a.readonly, readonly = _c === void 0 ? false : _c, _d = _a.placeholder, placeholder = _d === void 0 ? 'Start writing...' : _d, fieldConfiguration = _a.fieldConfiguration, _e = _a.disabledFeatures, disabledFeatures = _e === void 0 ? [] : _e, _f = _a.theme, theme = _f === void 0 ? 'contentful' : _f, _g = _a.availableHeadings, availableHeadings = _g === void 0 ? [1, 2, 3, 4, 5, 6] : _g, _h = _a.availableMarks, availableMarks = _h === void 0 ? ['bold', 'italic', 'underline'] : _h;
     // Parse Contentful field configuration to determine available features
-    const editorConfig = React.useMemo(() => {
+    var editorConfig = React.useMemo(function () {
         if (fieldConfiguration) {
             return parseContentfulFieldConfig(fieldConfiguration);
         }
         // Fallback to manual configuration
-        const disabled = [];
+        var disabled = [];
         if (!availableMarks.includes('bold'))
             disabled.push('bold');
         if (!availableMarks.includes('italic'))
             disabled.push('italic');
         if (!availableMarks.includes('underline'))
             disabled.push('underline');
-        disabled.push(...disabledFeatures);
+        disabled.push.apply(disabled, disabledFeatures);
         return {
-            availableHeadings,
-            availableMarks,
+            availableHeadings: availableHeadings,
+            availableMarks: availableMarks,
             disabledFeatures: disabled,
             allowHyperlinks: !disabledFeatures.includes('link'),
             allowEmbeddedEntries: !disabledFeatures.includes('embed'),
@@ -27654,8 +27734,8 @@ const ContentfulRichTextEditor = ({ initialValue, onChange, onEmbedEntry, onEmbe
         };
     }, [fieldConfiguration, disabledFeatures, availableHeadings, availableMarks]);
     // Build extensions array based on configuration
-    const extensions = React.useMemo(() => {
-        const exts = [];
+    var extensions = React.useMemo(function () {
+        var exts = [];
         // Add StarterKit with configuration
         exts.push(StarterKit.configure({
             heading: editorConfig.availableHeadings.length > 0 ? {
@@ -27716,20 +27796,21 @@ const ContentfulRichTextEditor = ({ initialValue, onChange, onEmbedEntry, onEmbe
         }
         return exts;
     }, [editorConfig]);
-    const editor = useEditor({
-        extensions,
+    var editor = useEditor({
+        extensions: extensions,
         content: initialValue ? contentfulToTiptap(initialValue) : '',
         editable: !readonly,
         editorProps: {
             attributes: {
-                class: `contentful-editor-content contentful-editor-content--${theme}`,
+                class: "contentful-editor-content contentful-editor-content--".concat(theme),
                 'data-placeholder': placeholder,
             },
         },
-        onUpdate: ({ editor }) => {
+        onUpdate: function (_a) {
+            var editor = _a.editor;
             if (onChange) {
                 try {
-                    const contentfulDoc = tiptapToContentful(editor.getJSON());
+                    var contentfulDoc = tiptapToContentful(editor.getJSON());
                     onChange(contentfulDoc);
                 }
                 catch (error) {
@@ -27739,80 +27820,113 @@ const ContentfulRichTextEditor = ({ initialValue, onChange, onEmbedEntry, onEmbe
         },
     });
     // Update editor content when initialValue changes
-    React.useEffect(() => {
+    React.useEffect(function () {
         if (editor && initialValue) {
-            const tiptapContent = contentfulToTiptap(initialValue);
+            var tiptapContent = contentfulToTiptap(initialValue);
             editor.commands.setContent(tiptapContent, false);
         }
     }, [editor, initialValue]);
-    const handleEmbedEntry = React.useCallback(async () => {
+    var handleEmbedEntry = React.useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
+        var entry, error_1;
         var _a, _b;
-        if (onEmbedEntry && editor && editorConfig.allowEmbeddedEntries) {
-            try {
-                const entry = await onEmbedEntry();
-                if (entry) {
-                    editor.chain().focus().insertContent({
-                        type: 'paragraph',
-                        content: [
-                            {
-                                type: 'text',
-                                text: `[Embedded Entry: ${((_a = entry.sys) === null || _a === void 0 ? void 0 : _a.id) || ((_b = entry.fields) === null || _b === void 0 ? void 0 : _b.title) || 'Unknown'}]`,
-                                marks: [{ type: 'bold' }],
-                            },
-                        ],
-                    }).run();
-                }
+        return __generator(this, function (_c) {
+            switch (_c.label) {
+                case 0:
+                    if (!(onEmbedEntry && editor && editorConfig.allowEmbeddedEntries)) return [3 /*break*/, 4];
+                    _c.label = 1;
+                case 1:
+                    _c.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, onEmbedEntry()];
+                case 2:
+                    entry = _c.sent();
+                    if (entry) {
+                        editor.chain().focus().insertContent({
+                            type: 'paragraph',
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: "[Embedded Entry: ".concat(((_a = entry.sys) === null || _a === void 0 ? void 0 : _a.id) || ((_b = entry.fields) === null || _b === void 0 ? void 0 : _b.title) || 'Unknown', "]"),
+                                    marks: [{ type: 'bold' }],
+                                },
+                            ],
+                        }).run();
+                    }
+                    return [3 /*break*/, 4];
+                case 3:
+                    error_1 = _c.sent();
+                    console.error('Error embedding entry:', error_1);
+                    return [3 /*break*/, 4];
+                case 4: return [2 /*return*/];
             }
-            catch (error) {
-                console.error('Error embedding entry:', error);
-            }
-        }
-    }, [onEmbedEntry, editor, editorConfig.allowEmbeddedEntries]);
-    const handleEmbedAsset = React.useCallback(async () => {
+        });
+    }); }, [onEmbedEntry, editor, editorConfig.allowEmbeddedEntries]);
+    var handleEmbedAsset = React.useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
+        var asset, error_2;
         var _a, _b;
-        if (onEmbedAsset && editor && editorConfig.allowEmbeddedAssets) {
-            try {
-                const asset = await onEmbedAsset();
-                if (asset) {
-                    editor.chain().focus().insertContent({
-                        type: 'paragraph',
-                        content: [
-                            {
-                                type: 'text',
-                                text: `[Embedded Asset: ${((_a = asset.sys) === null || _a === void 0 ? void 0 : _a.id) || ((_b = asset.fields) === null || _b === void 0 ? void 0 : _b.title) || 'Unknown'}]`,
-                                marks: [{ type: 'bold' }],
-                            },
-                        ],
-                    }).run();
-                }
+        return __generator(this, function (_c) {
+            switch (_c.label) {
+                case 0:
+                    if (!(onEmbedAsset && editor && editorConfig.allowEmbeddedAssets)) return [3 /*break*/, 4];
+                    _c.label = 1;
+                case 1:
+                    _c.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, onEmbedAsset()];
+                case 2:
+                    asset = _c.sent();
+                    if (asset) {
+                        editor.chain().focus().insertContent({
+                            type: 'paragraph',
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: "[Embedded Asset: ".concat(((_a = asset.sys) === null || _a === void 0 ? void 0 : _a.id) || ((_b = asset.fields) === null || _b === void 0 ? void 0 : _b.title) || 'Unknown', "]"),
+                                    marks: [{ type: 'bold' }],
+                                },
+                            ],
+                        }).run();
+                    }
+                    return [3 /*break*/, 4];
+                case 3:
+                    error_2 = _c.sent();
+                    console.error('Error embedding asset:', error_2);
+                    return [3 /*break*/, 4];
+                case 4: return [2 /*return*/];
             }
-            catch (error) {
-                console.error('Error embedding asset:', error);
-            }
-        }
-    }, [onEmbedAsset, editor, editorConfig.allowEmbeddedAssets]);
-    const handleEmbedInlineEntry = React.useCallback(async () => {
+        });
+    }); }, [onEmbedAsset, editor, editorConfig.allowEmbeddedAssets]);
+    var handleEmbedInlineEntry = React.useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
+        var entry, error_3;
         var _a, _b;
-        if (onEmbedInlineEntry && editor && editorConfig.allowInlineEntries) {
-            try {
-                const entry = await onEmbedInlineEntry();
-                if (entry) {
-                    editor.chain().focus().insertContent({
-                        type: 'text',
-                        text: `[Inline Entry: ${((_a = entry.sys) === null || _a === void 0 ? void 0 : _a.id) || ((_b = entry.fields) === null || _b === void 0 ? void 0 : _b.title) || 'Unknown'}]`,
-                        marks: [{ type: 'bold' }],
-                    }).run();
-                }
+        return __generator(this, function (_c) {
+            switch (_c.label) {
+                case 0:
+                    if (!(onEmbedInlineEntry && editor && editorConfig.allowInlineEntries)) return [3 /*break*/, 4];
+                    _c.label = 1;
+                case 1:
+                    _c.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, onEmbedInlineEntry()];
+                case 2:
+                    entry = _c.sent();
+                    if (entry) {
+                        editor.chain().focus().insertContent({
+                            type: 'text',
+                            text: "[Inline Entry: ".concat(((_a = entry.sys) === null || _a === void 0 ? void 0 : _a.id) || ((_b = entry.fields) === null || _b === void 0 ? void 0 : _b.title) || 'Unknown', "]"),
+                            marks: [{ type: 'bold' }],
+                        }).run();
+                    }
+                    return [3 /*break*/, 4];
+                case 3:
+                    error_3 = _c.sent();
+                    console.error('Error embedding inline entry:', error_3);
+                    return [3 /*break*/, 4];
+                case 4: return [2 /*return*/];
             }
-            catch (error) {
-                console.error('Error embedding inline entry:', error);
-            }
-        }
-    }, [onEmbedInlineEntry, editor, editorConfig.allowInlineEntries]);
+        });
+    }); }, [onEmbedInlineEntry, editor, editorConfig.allowInlineEntries]);
     if (!editor) {
-        return (jsxRuntime.jsx("div", { className: `contentful-editor contentful-editor--loading ${className}`, children: jsxRuntime.jsx("div", { className: "contentful-editor__loading", children: "Loading editor..." }) }));
+        return (jsxRuntime.jsx("div", { className: "contentful-editor contentful-editor--loading ".concat(className), children: jsxRuntime.jsx("div", { className: "contentful-editor__loading", children: "Loading editor..." }) }));
     }
-    return (jsxRuntime.jsxs("div", { className: `contentful-editor contentful-editor--${theme} ${className}`, children: [!readonly && (jsxRuntime.jsx(ContentfulToolbar, { editor: editor, onEmbedEntry: editorConfig.allowEmbeddedEntries ? handleEmbedEntry : undefined, onEmbedAsset: editorConfig.allowEmbeddedAssets ? handleEmbedAsset : undefined, onEmbedInlineEntry: editorConfig.allowInlineEntries ? handleEmbedInlineEntry : undefined, disabledFeatures: editorConfig.disabledFeatures, availableHeadings: editorConfig.availableHeadings, availableMarks: editorConfig.availableMarks, allowHyperlinks: editorConfig.allowHyperlinks })), jsxRuntime.jsx("div", { className: "contentful-editor__content-wrapper", children: jsxRuntime.jsx(EditorContent, { editor: editor, className: "contentful-editor__content" }) })] }));
+    return (jsxRuntime.jsxs("div", { className: "contentful-editor contentful-editor--".concat(theme, " ").concat(className), children: [!readonly && (jsxRuntime.jsx(ContentfulToolbar, { editor: editor, onEmbedEntry: editorConfig.allowEmbeddedEntries ? handleEmbedEntry : undefined, onEmbedAsset: editorConfig.allowEmbeddedAssets ? handleEmbedAsset : undefined, onEmbedInlineEntry: editorConfig.allowInlineEntries ? handleEmbedInlineEntry : undefined, disabledFeatures: editorConfig.disabledFeatures, availableHeadings: editorConfig.availableHeadings, availableMarks: editorConfig.availableMarks, allowHyperlinks: editorConfig.allowHyperlinks })), jsxRuntime.jsx("div", { className: "contentful-editor__content-wrapper", children: jsxRuntime.jsx(EditorContent, { editor: editor, className: "contentful-editor__content" }) })] }));
 };
 
 exports.BLOCKS = distExports.BLOCKS;
