@@ -21,3 +21,4 @@ build/
 Thumbs.dbnode_modules/
 
 npm-publish.sh
+dist/
