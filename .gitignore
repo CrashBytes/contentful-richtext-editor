@@ -20,4 +20,6 @@ build/
 .DS_Store
 Thumbs.dbnode_modules/
 
+npm-publish.sh
+
 coverage/
