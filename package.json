@@ -9,6 +9,9 @@
   "files": [
     "dist"
   ],
+   "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "contentful",
     "tiptap",

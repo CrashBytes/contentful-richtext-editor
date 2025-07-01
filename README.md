@@ -10,7 +10,7 @@ A modern, Tiptap-based rich text editor that's fully compatible with Contentful'
 - ✅ **Extensible** - Built on Tiptap v2 for easy customization
 - ✅ **Lightweight** - Tree-shakeable, only import what you need
 - ✅ **Responsive** - Works on desktop and mobile devices
-- ✅ **Optional Border Control** - Customize editor appearance with `showBorder` prop _(New in v2.0.4)_
+- ✅ **Customizable Borders** - Control editor appearance with `showBorder` prop
 
 ## 🚀 Installation
 
@@ -41,7 +41,7 @@ function App() {
         placeholder="Start writing your content..."
         onChange={handleChange}
         initialValue={content}
-        showBorder={true} // Optional: control border visibility
+        showBorder={true} // Control border visibility
       />
     </div>
   );
@@ -50,7 +50,7 @@ function App() {
 export default App;
 ```
 
-## 🎨 Border Control (New in v2.0.4)
+## 🎨 Border Control
 
 Control the editor's border appearance with the `showBorder` prop:
 
@@ -147,7 +147,7 @@ function ContentfulEditor() {
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `showBorder` | `boolean` | `true` | Control editor border visibility _(New in v2.0.4)_ |
+| `showBorder` | `boolean` | `true` | Control editor border visibility |
 | `initialValue` | `Document` | `undefined` | Initial Contentful rich text document |
 | `onChange` | `(document: Document) => void` | `undefined` | Callback when content changes |
 | `onEmbedEntry` | `() => Promise<any> \| void` | `undefined` | Callback for embedding Contentful entries |
@@ -323,11 +323,9 @@ MIT © [CrashBytes](https://github.com/CrashBytes)
 
 ## 📈 Version History
 
-- **v2.0.4** - Added optional border control with `showBorder` prop
-- **v2.0.3** - Package made publicly accessible
-- **v2.0.2** - Previous release
-- **v2.0.0** - Major feature update with automatic configuration
-- **v1.x** - Initial releases
+- **v2.0.4** - Added `showBorder` prop for flexible styling, resolved publishing issues
+- **v2.0.0** - Major release with full Contentful compatibility and modern architecture
+- **v1.x** - Initial releases with basic functionality
 
 ---
 
