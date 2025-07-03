@@ -1,24 +1,39 @@
-# @crashbytes/contentful-richtext-editor
+# Contentful Rich Text Editor
 
 A modern, Tiptap-based rich text editor that's fully compatible with Contentful's rich text format. Provides the same editing experience as Contentful's native editor while maintaining perfect compatibility with Contentful's document structure.
 
 ## ✨ Features
 
 - ✅ **Full Contentful Compatibility** - Seamless conversion between Contentful and Tiptap formats
-- ✅ **Modern UI** - Clean, intuitive interface matching Contentful's design
+- ✅ **Automatic Configuration** - Reads Contentful field settings to auto-configure the editor *(NEW in v2.0)*
+- ✅ **Modern UI** - Clean, intuitive interface matching Contentful's design  
 - ✅ **TypeScript Support** - Complete type safety with Contentful's rich text types
 - ✅ **Extensible** - Built on Tiptap v2 for easy customization
 - ✅ **Lightweight** - Tree-shakeable, only import what you need
 - ✅ **Responsive** - Works on desktop and mobile devices
-- ✅ **Customizable Borders** - Control editor appearance with `showBorder` prop
+- ✅ **Keyboard Shortcuts** - Built-in shortcuts for common actions *(NEW in v2.0)*
 
-## 🚀 Installation
+### Supported Features
+
+- **Text Formatting**: Bold, italic, underline
+- **Headings**: H1 through H6  
+- **Lists**: Ordered and unordered lists
+- **Links**: Hyperlinks with URL validation
+- **Tables**: Full table support with headers
+- **Quotes**: Blockquotes
+- **Embedded Content**: Callbacks for Contentful entries and assets
+- **Inline Entries**: Support for inline embedded entries *(NEW in v2.0)*
+- **Undo/Redo**: Full history support
+
+## 📦 Installation
 
 ```bash
 npm install @crashbytes/contentful-richtext-editor
 ```
 
-## 📖 Quick Start
+## 🚀 Quick Start
+
+### Basic Usage
 
 ```tsx
 import React, { useState } from 'react';
@@ -41,7 +56,6 @@ function App() {
         placeholder="Start writing your content..."
         onChange={handleChange}
         initialValue={content}
-        showBorder={true} // Control border visibility
       />
     </div>
   );
@@ -50,55 +64,41 @@ function App() {
 export default App;
 ```
 
-## 🎨 Border Control
+### Automatic Configuration (NEW in v2.0)
 
-Control the editor's border appearance with the `showBorder` prop:
+The editor can automatically configure itself based on your Contentful field settings:
 
 ```tsx
-// Default - with border (backward compatible)
-<ContentfulRichTextEditor />
+import { 
+  ContentfulRichTextEditor,
+  fetchContentfulFieldConfig 
+} from '@crashbytes/contentful-richtext-editor';
+import '@crashbytes/contentful-richtext-editor/dist/index.css';
 
-// Borderless editor for custom layouts
-<ContentfulRichTextEditor 
-  showBorder={false}
-  className="my-custom-editor"
-/>
+function AutoConfiguredEditor() {
+  const [fieldConfig, setFieldConfig] = useState();
 
-// Themed borderless editor
-<ContentfulRichTextEditor 
-  showBorder={false}
-  theme="minimal"
-/>
+  useEffect(() => {
+    // Fetch configuration from Contentful Management API
+    fetchContentfulFieldConfig(
+      'your-space-id',
+      'your-content-type-id', 
+      'your-field-id',
+      'your-management-token'
+    ).then(setFieldConfig);
+  }, []);
+
+  return (
+    <ContentfulRichTextEditor
+      fieldConfiguration={fieldConfig}
+      placeholder="Auto-configured based on Contentful settings!"
+      onChange={handleChange}
+    />
+  );
+}
 ```
 
-### Custom Styling with Borderless Mode
-
-```css
-/* Custom styling for borderless editor */
-.my-custom-editor {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  border-radius: 8px;
-}
-
-.my-custom-editor .contentful-toolbar {
-  background: linear-gradient(45deg, #667eea, #764ba2);
-}
-```
-
-## 🎯 Supported Features
-
-- **Text Formatting**: Bold, italic, underline
-- **Headings**: H1 through H6
-- **Lists**: Ordered and unordered lists
-- **Links**: Hyperlinks with URL validation
-- **Tables**: Full table support with headers
-- **Quotes**: Blockquotes
-- **Embedded Content**: Callbacks for Contentful entries and assets
-- **Undo/Redo**: Full history support
-
-## 🔧 Advanced Usage
-
-### With Contentful Integration
+### Advanced Usage with Embeds
 
 ```tsx
 import { ContentfulRichTextEditor } from '@crashbytes/contentful-richtext-editor';
@@ -112,9 +112,15 @@ function ContentfulEditor() {
   };
 
   const handleEmbedAsset = async () => {
-    // Your logic to select a Contentful asset
+    // Your logic to select a Contentful asset  
     const asset = await openAssetSelector();
     return asset;
+  };
+
+  const handleEmbedInlineEntry = async () => {
+    // NEW v2.0 - Your logic to select an inline entry
+    const entry = await openInlineEntrySelector();
+    return entry;
   };
 
   return (
@@ -123,14 +129,14 @@ function ContentfulEditor() {
       onChange={(doc) => saveToContentful(doc)}
       onEmbedEntry={handleEmbedEntry}
       onEmbedAsset={handleEmbedAsset}
+      onEmbedInlineEntry={handleEmbedInlineEntry}
       theme="contentful"
-      showBorder={true}
     />
   );
 }
 ```
 
-### Customized Editor
+### Minimal Configuration
 
 ```tsx
 <ContentfulRichTextEditor
@@ -143,25 +149,58 @@ function ContentfulEditor() {
 />
 ```
 
-## 📋 Props Reference
+### With Initial Content
+
+```tsx
+import { createEmptyDocument } from '@crashbytes/contentful-richtext-editor';
+
+const initialContent = {
+  nodeType: 'document',
+  data: {},
+  content: [
+    {
+      nodeType: 'paragraph', 
+      data: {},
+      content: [
+        {
+          nodeType: 'text',
+          value: 'Hello world!',
+          marks: [{ type: 'bold' }],
+          data: {}
+        }
+      ]
+    }
+  ]
+};
+
+<ContentfulRichTextEditor
+  initialValue={initialContent}
+  onChange={handleChange}
+/>
+```
+
+## 📋 API Reference
+
+### ContentfulRichTextEditor Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `showBorder` | `boolean` | `true` | Control editor border visibility |
+| `availableHeadings` | `Array<1\|2\|3\|4\|5\|6>` | `[1,2,3,4,5,6]` | Available heading levels (fallback when no fieldConfiguration) |
+| `availableMarks` | `Array<'bold'\|'italic'\|'underline'>` | `['bold','italic','underline']` | Available text formatting marks (fallback when no fieldConfiguration) |
+| `className` | `string` | `''` | Additional CSS classes |
+| `disabledFeatures` | `Array<string>` | `[]` | Features to disable |
+| `fieldConfiguration` | `ContentfulFieldConfiguration` | `undefined` | **NEW v2.0** - Contentful field validation config (takes precedence over manual settings) |
 | `initialValue` | `Document` | `undefined` | Initial Contentful rich text document |
 | `onChange` | `(document: Document) => void` | `undefined` | Callback when content changes |
-| `onEmbedEntry` | `() => Promise<any> \| void` | `undefined` | Callback for embedding Contentful entries |
 | `onEmbedAsset` | `() => Promise<any> \| void` | `undefined` | Callback for embedding Contentful assets |
-| `onEmbedInlineEntry` | `() => Promise<any> \| void` | `undefined` | Callback for embedding inline entries |
+| `onEmbedEntry` | `() => Promise<any> \| void` | `undefined` | Callback for embedding Contentful entries |
+| `onEmbedInlineEntry` | `() => Promise<any> \| void` | `undefined` | **NEW v2.0** - Callback for embedding inline entries |
 | `placeholder` | `string` | `'Start writing...'` | Placeholder text |
 | `readonly` | `boolean` | `false` | Whether editor is read-only |
-| `className` | `string` | `''` | Additional CSS classes |
+| `showBorder` | `boolean` | `true` | Whether to show border around the editor |
 | `theme` | `'default' \| 'minimal' \| 'contentful'` | `'contentful'` | Visual theme |
-| `disabledFeatures` | `Array<string>` | `[]` | Features to disable |
-| `availableHeadings` | `Array<1 \| 2 \| 3 \| 4 \| 5 \| 6>` | `[1,2,3,4,5,6]` | Available heading levels |
-| `availableMarks` | `Array<'bold' \| 'italic' \| 'underline'>` | `['bold','italic','underline']` | Available text formatting |
 
-## 🚫 Disabling Features
+### Disabled Features
 
 You can disable specific features by passing them in the `disabledFeatures` array:
 
@@ -175,6 +214,20 @@ You can disable specific features by passing them in the `disabledFeatures` arra
 - `'table'` - Tables
 - `'embed'` - Embedded content
 
+### Configuration Types (NEW v2.0)
+
+```tsx
+interface ContentfulFieldConfiguration {
+  validations?: Array<{
+    enabledMarks?: string[];        // ['bold', 'italic', 'underline', 'code']
+    enabledNodeTypes?: string[];    // ['paragraph', 'heading-1', 'unordered-list', ...]
+  }>;
+  settings?: {
+    helpText?: string;
+  };
+}
+```
+
 ## 🛠️ Utility Functions
 
 ```tsx
@@ -183,22 +236,46 @@ import {
   tiptapToContentful,
   validateContentfulDocument,
   createEmptyDocument,
-  extractPlainText,
-  countWords,
-  findEmbeddedContent
+  extractPlainText,        // NEW v2.0
+  countWords,             // NEW v2.0
+  findEmbeddedContent,    // NEW v2.0
+  sanitizeContentfulDocument // NEW v2.0
 } from '@crashbytes/contentful-richtext-editor';
 
 // Convert between formats
 const tiptapJson = contentfulToTiptap(contentfulDocument);
 const contentfulDoc = tiptapToContentful(tiptapJson);
 
-// Validation and utilities
+// Validation
 const isValid = validateContentfulDocument(someDocument);
+
+// Create empty document
 const emptyDoc = createEmptyDocument();
-const plainText = extractPlainText(document);
-const wordCount = countWords(document);
-const embedded = findEmbeddedContent(document);
+
+// NEW v2.0 - Content analysis
+const plainText = extractPlainText(contentfulDocument);
+const wordCount = countWords(contentfulDocument);
+const embedded = findEmbeddedContent(contentfulDocument);
+
+// NEW v2.0 - Sanitize content
+const sanitized = sanitizeContentfulDocument(
+  document,
+  ['paragraph', 'heading-1', 'unordered-list'], // allowed nodes
+  ['bold', 'italic'] // allowed marks
+);
 ```
+
+## ⌨️ Keyboard Shortcuts (NEW v2.0)
+
+- `Cmd/Ctrl + B` - Bold
+- `Cmd/Ctrl + I` - Italic
+- `Cmd/Ctrl + U` - Underline
+- `Cmd/Ctrl + K` - Add/edit link
+- `Cmd/Ctrl + Shift + E` - Embed entry
+- `Cmd/Ctrl + Shift + A` - Embed asset
+- `Cmd/Ctrl + Shift + I` - Embed inline entry
+- `Cmd/Ctrl + Z` - Undo
+- `Cmd/Ctrl + Y` / `Cmd/Ctrl + Shift + Z` - Redo
 
 ## 🎨 Styling
 
@@ -207,8 +284,6 @@ The editor comes with default styles that match Contentful's design. Import the 
 ```tsx
 import '@crashbytes/contentful-richtext-editor/dist/index.css';
 ```
-
-### Custom Styling
 
 You can override the default styles by targeting the CSS classes:
 
@@ -225,25 +300,27 @@ You can override the default styles by targeting the CSS classes:
   font-family: 'Your Font', sans-serif;
 }
 
-/* Borderless editor styling */
-.contentful-editor--borderless {
-  border: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+/* NEW v2.0 - Inline entries */
+.contentful-inline-embedded-entry {
+  background: #e8f4fd;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 600;
 }
 ```
 
 ### Themes
 
-**Contentful** (default)
+**`contentful`** (default)  
 Matches Contentful's native editor appearance.
 
-**Minimal**  
+**`minimal`**  
 Clean, minimal design with reduced visual elements.
 
-**Default**
+**`default`**  
 Standard rich text editor appearance with serif fonts.
 
-## 🌐 Next.js Usage
+## ⚛️ Next.js Integration
 
 ```tsx
 // pages/editor.tsx or app/editor/page.tsx
@@ -260,14 +337,13 @@ export default function EditorPage() {
       <ContentfulEditor
         placeholder="Write something amazing..."
         onChange={(doc) => console.log(doc)}
-        showBorder={false}
       />
     </div>
   );
 }
 ```
 
-## 📝 TypeScript Support
+## 🔷 TypeScript Support
 
 This package is written in TypeScript and includes full type definitions. All Contentful rich text types are re-exported for convenience:
 
@@ -277,7 +353,9 @@ import type {
   Block,
   Inline,
   Text,
-  ContentfulRichTextEditorProps
+  ContentfulRichTextEditorProps,
+  ContentfulFieldConfiguration,    // NEW v2.0
+  ParsedEditorConfig              // NEW v2.0
 } from '@crashbytes/contentful-richtext-editor';
 ```
 
@@ -287,19 +365,6 @@ import type {
 - Firefox 78+
 - Safari 13+
 - Edge 80+
-
-## 🔄 Migration
-
-### From v2.0.3 to v2.0.4
-No breaking changes! Simply update and optionally use the new `showBorder` prop:
-
-```tsx
-// Before
-<ContentfulRichTextEditor />
-
-// After (optional)
-<ContentfulRichTextEditor showBorder={false} />
-```
 
 ## 🤝 Contributing
 
@@ -320,12 +385,6 @@ MIT © [CrashBytes](https://github.com/CrashBytes)
 - [@contentful/rich-text-react-renderer](https://www.npmjs.com/package/@contentful/rich-text-react-renderer) - For rendering Contentful rich text
 - [@contentful/rich-text-types](https://www.npmjs.com/package/@contentful/rich-text-types) - Contentful rich text type definitions  
 - [@tiptap/react](https://www.npmjs.com/package/@tiptap/react) - The underlying editor framework
-
-## 📈 Version History
-
-- **v2.0.4** - Added `showBorder` prop for flexible styling, resolved publishing issues
-- **v2.0.0** - Major release with full Contentful compatibility and modern architecture
-- **v1.x** - Initial releases with basic functionality
 
 ---
 
