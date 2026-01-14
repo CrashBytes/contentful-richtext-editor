@@ -59,42 +59,42 @@ jest.mock('@tiptap/starter-kit', () => ({
 
 jest.mock('@tiptap/extension-link', () => ({
   __esModule: true,
-  default: {
-    configure: jest.fn(() => 'Link'),
+  Link: {
+    configure: jest.fn(() => ({ name: 'link' })),
   },
 }));
 
 jest.mock('@tiptap/extension-table', () => ({
   __esModule: true,
-  default: {
-    configure: jest.fn(() => 'Table'),
+  Table: {
+    configure: jest.fn(() => ({ name: 'table' })),
   },
 }));
 
 jest.mock('@tiptap/extension-table-row', () => ({
   __esModule: true,
-  default: {
-    configure: jest.fn(() => 'TableRow'),
+  TableRow: {
+    configure: jest.fn(() => ({ name: 'tableRow' })),
   },
 }));
 
 jest.mock('@tiptap/extension-table-header', () => ({
   __esModule: true,
-  default: {
-    configure: jest.fn(() => 'TableHeader'),
+  TableHeader: {
+    configure: jest.fn(() => ({ name: 'tableHeader' })),
   },
 }));
 
 jest.mock('@tiptap/extension-table-cell', () => ({
   __esModule: true,
-  default: {
-    configure: jest.fn(() => 'TableCell'),
+  TableCell: {
+    configure: jest.fn(() => ({ name: 'tableCell' })),
   },
 }));
 
 jest.mock('@tiptap/extension-underline', () => ({
   __esModule: true,
-  default: 'Underline',
+  Underline: 'Underline',
 }));
 
 const mockContentfulTransform = contentfulTransform as jest.Mocked<typeof contentfulTransform>;
@@ -371,7 +371,7 @@ describe('ContentfulRichTextEditor', () => {
     });
 
     it('includes Link extension when hyperlinks allowed', () => {
-      const Link = require('@tiptap/extension-link').default;
+      const Link = require('@tiptap/extension-link').Link;
       
       render(<ContentfulRichTextEditor />);
       
@@ -385,10 +385,10 @@ describe('ContentfulRichTextEditor', () => {
     });
 
     it('includes Table extensions when tables allowed', () => {
-      const Table = require('@tiptap/extension-table').default;
-      const TableRow = require('@tiptap/extension-table-row').default;
-      const TableHeader = require('@tiptap/extension-table-header').default;
-      const TableCell = require('@tiptap/extension-table-cell').default;
+      const Table = require('@tiptap/extension-table').Table;
+      const TableRow = require('@tiptap/extension-table-row').TableRow;
+      const TableHeader = require('@tiptap/extension-table-header').TableHeader;
+      const TableCell = require('@tiptap/extension-table-cell').TableCell;
       
       render(<ContentfulRichTextEditor />);
       
@@ -408,15 +408,15 @@ describe('ContentfulRichTextEditor', () => {
     });
 
     it('excludes extensions when features are disabled', () => {
+      const Link = require('@tiptap/extension-link').Link;
+      const Table = require('@tiptap/extension-table').Table;
+      
       render(
         <ContentfulRichTextEditor 
           disabledFeatures={['link', 'table']}
           availableMarks={['bold']}
         />
       );
-      
-      const Link = require('@tiptap/extension-link').default;
-      const Table = require('@tiptap/extension-table').default;
       
       expect(Link.configure).not.toHaveBeenCalled();
       expect(Table.configure).not.toHaveBeenCalled();
@@ -576,7 +576,7 @@ describe('ContentfulRichTextEditor', () => {
       expect(mockContentfulTransform.contentfulToTiptap).toHaveBeenCalledWith(initialValue2);
       expect(setContent).toHaveBeenCalledWith(
         expect.any(Object), // The converted tiptap content
-        false
+        { emitUpdate: false }
       );
     });
 

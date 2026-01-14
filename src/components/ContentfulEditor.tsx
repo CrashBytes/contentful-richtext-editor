@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
-import Table from '@tiptap/extension-table';
-import TableRow from '@tiptap/extension-table-row';
-import TableHeader from '@tiptap/extension-table-header';
-import TableCell from '@tiptap/extension-table-cell';
-import Underline from '@tiptap/extension-underline';
+import { Link } from '@tiptap/extension-link';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { Underline } from '@tiptap/extension-underline';
 import { Document } from '@contentful/rich-text-types';
 import { ContentfulToolbar } from './Toolbar';
 import { contentfulToTiptap, tiptapToContentful } from '../utils/contentfulTransform';
@@ -166,7 +166,7 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
   useEffect(() => {
     if (editor && initialValue) {
       const tiptapContent = contentfulToTiptap(initialValue);
-      editor.commands.setContent(tiptapContent, false);
+      editor.commands.setContent(tiptapContent, { emitUpdate: false });
     }
   }, [editor, initialValue]);
 

@@ -5,18 +5,23 @@ on:
     tags:
       - 'v*'
 
+# CRITICAL: Required for npm Trusted Publishing (OIDC authentication)
+permissions:
+  contents: write  # Needed to create GitHub releases
+  id-token: write  # Needed for npm provenance/trusted publishing
+
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
@@ -28,18 +33,16 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Publish to npm
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to npm with Provenance
+        run: npm publish --provenance --access public
+        # No NPM_TOKEN needed! OIDC authentication happens automatically
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body_path: RELEASE_NOTES.md
+          name: Release ${{ github.ref_name }}
+          body: |
+            See [CHANGELOG.md](https://github.com/CrashBytes/contentful-richtext-editor/blob/main/CHANGELOG.md) for details.
           draft: false
           prerelease: false

@@ -1,6 +1,6 @@
 {
   "name": "@crashbytes/contentful-richtext-editor",
-  "version": "2.0.6",
+  "version": "3.0.0",
   "description": "A Tiptap-based rich text editor compatible with Contentful's rich text format",
   "type": "module",
   "main": "dist/index.js",
@@ -49,16 +49,16 @@
   },
   "dependencies": {
     "@contentful/rich-text-types": "^16.8.5",
-    "@tiptap/extension-link": "^2.27.2",
-    "@tiptap/extension-table": "^2.27.2",
-    "@tiptap/extension-table-cell": "^2.27.2",
-    "@tiptap/extension-table-header": "^2.27.2",
-    "@tiptap/extension-table-row": "^2.27.2",
-    "@tiptap/extension-text-style": "^2.27.2",
-    "@tiptap/extension-underline": "^2.27.2",
-    "@tiptap/pm": "^2.27.2",
-    "@tiptap/react": "^2.27.2",
-    "@tiptap/starter-kit": "^2.27.2"
+    "@tiptap/extension-link": "^3.15.3",
+    "@tiptap/extension-table": "^3.15.3",
+    "@tiptap/extension-table-cell": "^3.15.3",
+    "@tiptap/extension-table-header": "^3.15.3",
+    "@tiptap/extension-table-row": "^3.15.3",
+    "@tiptap/extension-text-style": "^3.15.3",
+    "@tiptap/extension-underline": "^3.15.3",
+    "@tiptap/pm": "^3.15.3",
+    "@tiptap/react": "^3.15.3",
+    "@tiptap/starter-kit": "^3.15.3"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.27.2",
