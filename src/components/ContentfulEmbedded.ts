@@ -225,6 +225,13 @@ export const EmbeddedAsset = Node.create({
 
 // Helper function to create embedded content from Contentful data
 export const createEmbeddedEntryFromContentful = (entry: any) => {
+  if (!entry) {
+    return {
+      entryId: undefined,
+      contentType: undefined,
+      title: undefined,
+    };
+  }
   return {
     entryId: entry.sys?.id,
     contentType: entry.sys?.contentType?.sys?.id,
@@ -233,6 +240,14 @@ export const createEmbeddedEntryFromContentful = (entry: any) => {
 };
 
 export const createEmbeddedAssetFromContentful = (asset: any) => {
+  if (!asset) {
+    return {
+      assetId: undefined,
+      title: undefined,
+      url: undefined,
+      mimeType: undefined,
+    };
+  }
   return {
     assetId: asset.sys?.id,
     title: asset.fields?.title || asset.fields?.file?.fileName,

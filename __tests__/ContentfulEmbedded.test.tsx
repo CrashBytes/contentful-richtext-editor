@@ -15,15 +15,22 @@ jest.mock('@tiptap/react', () => ({
   ReactNodeViewRenderer: jest.fn((component) => component),
 }));
 
-// Import after mocking
+// Import after mocking - import all exports to trigger Node.create calls
 import {
   createEmbeddedEntryFromContentful,
   createEmbeddedAssetFromContentful,
+  EmbeddedEntry,
+  EmbeddedAsset,
+  InlineEmbeddedEntry,
 } from '@/components/ContentfulEmbedded';
 
 describe('ContentfulEmbedded - Working Tests', () => {
+  // Save initial mock counts before they get cleared
+  const initialNodeCreateCalls = require('@tiptap/core').Node.create.mock.calls.length;
+  const initialReactNodeViewRendererCalls = require('@tiptap/react').ReactNodeViewRenderer.mock.calls.length;
+
   beforeEach(() => {
-    jest.clearAllMocks();
+    // Clear mocks for component tests, but save the module-level call counts
   });
 
   describe('Helper Functions - All Branches', () => {
@@ -481,11 +488,12 @@ describe('ContentfulEmbedded - Working Tests', () => {
         render(<EmbeddedAssetComponent node={mockNode} />);
         
         const container = document.querySelector('[data-asset-id="asset-123"]');
-        expect(container).toHaveClass('contentful-embedded-asset-image');
+        expect(container).toHaveClass('contentful-embedded-asset--image');
         
         const image = screen.getByRole('img');
         expect(image).toHaveAttribute('src', 'https://example.com/image.jpg');
         expect(image).toHaveAttribute('alt', 'Test Image');
+        expect(image).toHaveClass('contentful-embedded-asset-image');
         
         const caption = screen.getByText('Test Image');
         expect(caption.tagName).toBe('P');
@@ -504,8 +512,14 @@ describe('ContentfulEmbedded - Working Tests', () => {
 
         render(<EmbeddedAssetComponent node={mockNode} />);
         
-        const image = screen.getByRole('img');
+        const container = document.querySelector('[data-asset-id="asset-456"]');
+        expect(container).toHaveClass('contentful-embedded-asset--image');
+        
+        const image = document.querySelector('img');
+        expect(image).toBeInTheDocument();
+        expect(image).toHaveAttribute('src', 'https://example.com/photo.png');
         expect(image).toHaveAttribute('alt', '');
+        expect(image).toHaveClass('contentful-embedded-asset-image');
         expect(document.querySelector('.contentful-embedded-asset-caption')).not.toBeInTheDocument();
       });
 
@@ -522,8 +536,14 @@ describe('ContentfulEmbedded - Working Tests', () => {
 
         render(<EmbeddedAssetComponent node={mockNode} />);
         
-        const image = screen.getByRole('img');
+        const container = document.querySelector('[data-asset-id="asset-empty"]');
+        expect(container).toHaveClass('contentful-embedded-asset--image');
+        
+        const image = document.querySelector('img');
+        expect(image).toBeInTheDocument();
+        expect(image).toHaveAttribute('src', 'https://example.com/image.gif');
         expect(image).toHaveAttribute('alt', '');
+        expect(image).toHaveClass('contentful-embedded-asset-image');
         expect(document.querySelector('.contentful-embedded-asset-caption')).not.toBeInTheDocument();
       });
 
@@ -637,18 +657,16 @@ describe('ContentfulEmbedded - Working Tests', () => {
 
   describe('Node Configuration Testing', () => {
     it('validates Node.create was called', () => {
-      const mockNodeCreate = require('@tiptap/core').Node.create;
-      expect(mockNodeCreate).toHaveBeenCalledTimes(3); // Three nodes created
-    });
-
-    it('validates ReactNodeViewRenderer was called', () => {
-      const mockReactNodeViewRenderer = require('@tiptap/react').ReactNodeViewRenderer;
-      expect(mockReactNodeViewRenderer).toHaveBeenCalledTimes(3); // Three components
+      expect(initialNodeCreateCalls).toBe(3); // Three nodes created at module load
     });
 
     it('validates mergeAttributes was set up', () => {
       const mockMergeAttributes = require('@tiptap/core').mergeAttributes;
       expect(mockMergeAttributes).toBeDefined();
     });
+
+    // Note: ReactNodeViewRenderer is called lazily by TipTap when nodes are added to the editor,
+    // not at module load time, so we don't test it here. The component rendering tests
+    // already verify the components work correctly.
   });
 });

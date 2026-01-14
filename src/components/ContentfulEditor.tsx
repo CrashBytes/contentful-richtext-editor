@@ -51,16 +51,18 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
     if (fieldConfiguration) {
       return parseContentfulFieldConfig(fieldConfiguration);
     }
-    const disabled: string[] = [];
-    if (!availableMarks.includes('bold')) disabled.push('bold');
-    if (!availableMarks.includes('italic')) disabled.push('italic');
-    if (!availableMarks.includes('underline')) disabled.push('underline');
-    disabled.push(...disabledFeatures);
+    const disabledSet = new Set<string>();
+    // Add missing marks first to maintain expected order
+    if (!availableMarks.includes('bold')) disabledSet.add('bold');
+    if (!availableMarks.includes('italic')) disabledSet.add('italic');
+    if (!availableMarks.includes('underline')) disabledSet.add('underline');
+    // Then add explicitly disabled features
+    disabledFeatures.forEach(f => disabledSet.add(f));
 
     return {
       availableHeadings,
       availableMarks,
-      disabledFeatures: disabled,
+      disabledFeatures: Array.from(disabledSet),
       allowHyperlinks: !disabledFeatures.includes('link'),
       allowEmbeddedEntries: !disabledFeatures.includes('embed'),
       allowEmbeddedAssets: !disabledFeatures.includes('embed'),
@@ -249,9 +251,9 @@ export const ContentfulRichTextEditor: React.FC<ContentfulRichTextEditorProps> =
       {!readonly && (
         <ContentfulToolbar
           editor={editor}
-          onEmbedEntry={editorConfig.allowEmbeddedEntries ? handleEmbedEntry : undefined}
-          onEmbedAsset={editorConfig.allowEmbeddedAssets ? handleEmbedAsset : undefined}
-          onEmbedInlineEntry={editorConfig.allowInlineEntries ? handleEmbedInlineEntry : undefined}
+          onEmbedEntry={onEmbedEntry && editorConfig.allowEmbeddedEntries ? handleEmbedEntry : undefined}
+          onEmbedAsset={onEmbedAsset && editorConfig.allowEmbeddedAssets ? handleEmbedAsset : undefined}
+          onEmbedInlineEntry={onEmbedInlineEntry && editorConfig.allowInlineEntries ? handleEmbedInlineEntry : undefined}
           disabledFeatures={editorConfig.disabledFeatures}
           availableHeadings={editorConfig.availableHeadings}
           availableMarks={editorConfig.availableMarks}

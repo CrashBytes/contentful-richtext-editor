@@ -1,5 +1,4 @@
 export default {
-  preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'jsdom',
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   
@@ -9,7 +8,6 @@ export default {
 
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
-      useESM: true,
       tsconfig: {
         jsx: 'react-jsx',
         esModuleInterop: true,

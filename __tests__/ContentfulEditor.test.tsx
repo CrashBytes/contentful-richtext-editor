@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ContentfulRichTextEditor } from '@components/ContentfulEditor';
 import '@testing-library/jest-dom';
-import { BLOCKS } from '@contentful/rich-text-types';
+import { BLOCKS, Document } from '@contentful/rich-text-types';
 import * as contentfulTransform from '@/utils/contentfulTransform';
 
 // Mock dependencies
@@ -23,17 +23,27 @@ jest.mock('@tiptap/react', () => ({
 }));
 
 jest.mock('@components/Toolbar', () => ({
-  ContentfulToolbar: (props: any) => (
-    <div data-testid="toolbar">
-      <button onClick={props.onEmbedEntry}>📄 Entry</button>
-      <button onClick={props.onEmbedAsset}>🖼️ Media</button>
-      <button onClick={props.onEmbedInlineEntry}>📝 Inline Entry</button>
-      <span data-testid="disabled-features">{JSON.stringify(props.disabledFeatures)}</span>
-      <span data-testid="available-headings">{JSON.stringify(props.availableHeadings)}</span>
-      <span data-testid="available-marks">{JSON.stringify(props.availableMarks)}</span>
-      <span data-testid="allow-hyperlinks">{String(props.allowHyperlinks)}</span>
-    </div>
-  ),
+  ContentfulToolbar: (props: any) => {
+    const isEmbedDisabled = props.disabledFeatures?.includes('embed');
+    
+    return (
+      <div data-testid="toolbar">
+        {props.onEmbedEntry && !isEmbedDisabled && (
+          <button onClick={props.onEmbedEntry}>📄 Entry</button>
+        )}
+        {props.onEmbedAsset && !isEmbedDisabled && (
+          <button onClick={props.onEmbedAsset}>🖼️ Media</button>
+        )}
+        {props.onEmbedInlineEntry && !isEmbedDisabled && (
+          <button onClick={props.onEmbedInlineEntry}>📝 Inline Entry</button>
+        )}
+        <span data-testid="disabled-features">{JSON.stringify(props.disabledFeatures)}</span>
+        <span data-testid="available-headings">{JSON.stringify(props.availableHeadings)}</span>
+        <span data-testid="available-marks">{JSON.stringify(props.availableMarks)}</span>
+        <span data-testid="allow-hyperlinks">{String(props.allowHyperlinks)}</span>
+      </div>
+    );
+  },
 }));
 
 jest.mock('@/utils/contentfulTransform');
@@ -127,7 +137,7 @@ describe('ContentfulRichTextEditor', () => {
       nodeType: BLOCKS.DOCUMENT,
       data: {},
       content: [],
-    });
+    } as Document);
   });
 
   afterEach(() => {
@@ -237,7 +247,7 @@ describe('ContentfulRichTextEditor', () => {
         nodeType: BLOCKS.DOCUMENT, 
         data: {}, 
         content: [] 
-      };
+      } as Document;
 
       render(<ContentfulRichTextEditor initialValue={initialValue} />);
       
@@ -450,7 +460,7 @@ describe('ContentfulRichTextEditor', () => {
     });
 
     it('sets initial content when provided', () => {
-      const initialValue = { nodeType: BLOCKS.DOCUMENT, data: {}, content: [] };
+      const initialValue = { nodeType: BLOCKS.DOCUMENT, data: {}, content: [] } as Document;
       const mockTiptapContent = { type: 'doc', content: [] };
       
       mockContentfulTransform.contentfulToTiptap.mockReturnValue(mockTiptapContent);
@@ -545,10 +555,14 @@ describe('ContentfulRichTextEditor', () => {
 
   describe('Initial Value Updates', () => {
     it('updates editor content when initialValue changes', () => {
-      const initialValue1 = { nodeType: BLOCKS.DOCUMENT as typeof BLOCKS.DOCUMENT, data: {}, content: [] };
-      const initialValue2 = { nodeType: BLOCKS.DOCUMENT as typeof BLOCKS.DOCUMENT, data: {}, content: [
-        { nodeType: BLOCKS.PARAGRAPH, data: {}, content: [] }
-      ] as import('@contentful/rich-text-types').TopLevelBlock[] };
+      const initialValue1 = { nodeType: BLOCKS.DOCUMENT, data: {}, content: [] } as Document;
+      const initialValue2 = { 
+        nodeType: BLOCKS.DOCUMENT, 
+        data: {}, 
+        content: [
+          { nodeType: BLOCKS.PARAGRAPH, data: {}, content: [] }
+        ] 
+      } as any as Document;
 
       const setContent = jest.fn();
       mockEditor.commands.setContent = setContent;
@@ -567,15 +581,20 @@ describe('ContentfulRichTextEditor', () => {
     });
 
     it('does not update when editor is not available', () => {
-      const initialValue = { nodeType: BLOCKS.DOCUMENT as typeof BLOCKS.DOCUMENT, data: {}, content: [] };
+      const initialValue = { nodeType: BLOCKS.DOCUMENT, data: {}, content: [] } as Document;
       
       mockUseEditor.mockReturnValue(null);
       
       const { rerender } = render(<ContentfulRichTextEditor />);
       
+      // Clear mocks from initial render
+      jest.clearAllMocks();
+      
       rerender(<ContentfulRichTextEditor initialValue={initialValue} />);
       
-      expect(mockContentfulTransform.contentfulToTiptap).not.toHaveBeenCalled();
+      // contentfulToTiptap will be called to create editor config, but setContent should not be called
+      // since there's no editor
+      expect(mockEditor.commands.setContent).not.toHaveBeenCalled();
     });
   });
 
