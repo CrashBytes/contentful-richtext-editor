@@ -23,7 +23,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # NO registry-url for Trusted Publishing - OIDC handles auth automatically
+          registry-url: 'https://registry.npmjs.org'
+          # IMPORTANT: No NODE_AUTH_TOKEN for Trusted Publishing!
+          # OIDC authentication happens automatically
 
       - name: Upgrade npm for Trusted Publishing
         run: npm install -g npm@latest  # Requires npm >= 11.5.1
