@@ -23,10 +23,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # NO registry-url - prevents .npmrc conflicts with OIDC
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Upgrade npm for Trusted Publishing
         run: npm install -g npm@latest  # Requires npm >= 11.5.1
+      
+      - name: Configure npm for OIDC (remove token placeholder)
+        run: |
+          # Remove any _authToken line that setup-node may have added
+          if [ -f ~/.npmrc ]; then
+            sed -i '/_authToken/d' ~/.npmrc
+          fi
+          # Verify no auth token in config
+          cat ~/.npmrc || echo "No .npmrc file"
 
       - name: Install dependencies
         run: npm ci
@@ -38,8 +47,8 @@ jobs:
         run: npm test
 
       - name: Publish to npm with Provenance
-        run: npm publish --provenance --access public --registry=https://registry.npmjs.org
-        # OIDC authentication happens automatically - no tokens needed!
+        run: npm publish --provenance --access public
+        # OIDC authentication via GitHub Actions - no tokens needed!
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
