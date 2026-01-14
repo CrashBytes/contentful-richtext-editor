@@ -32,6 +32,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Zero known vulnerabilities (npm audit clean)
 - All 175 tests passing
+- **npm Trusted Publishing enabled** - packages published via OIDC (no tokens)
+- **Cryptographic provenance** - every release includes verifiable supply chain attestation
+- **Automated security audits** - weekly dependency vulnerability scanning
+- **Dependabot enabled** - automated dependency updates with grouped PRs
+- **CodeQL analysis** - continuous code security scanning
+- **React compatibility testing** - automated React 18 & 19 compatibility matrix
+
+### Infrastructure
+- Migrated to npm Trusted Publishing (OIDC) from classic tokens
+- Automated release workflow with provenance generation
+- Supply chain verification via Sigstore transparency log
+- GitHub Releases automatically created from tags
+- Comprehensive security badge suite in README
+- Multi-version React testing in CI/CD
+
+**Verify Package Provenance:**
+```bash
+npm view @crashbytes/contentful-richtext-editor dist.integrity
+# Or visit: https://search.sigstore.dev/
+```
 
 ### Migration Guide
 If you're upgrading from v2.x, the public API remains the same. No changes needed to your component usage:
