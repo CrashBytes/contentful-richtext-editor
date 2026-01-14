@@ -1,22 +1,44 @@
 # @crashbytes/contentful-richtext-editor
 
-A modern, Tiptap-based rich text editor that's fully compatible with Contentful's rich text format. Provides the same editing experience as Contentful's native editor while maintaining perfect compatibility with Contentful's document structure.
+[![npm version](https://img.shields.io/npm/v/@crashbytes/contentful-richtext-editor.svg)](https://www.npmjs.com/package/@crashbytes/contentful-richtext-editor)
+[![npm downloads](https://img.shields.io/npm/dm/@crashbytes/contentful-richtext-editor.svg)](https://www.npmjs.com/package/@crashbytes/contentful-richtext-editor)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Security Audit](https://github.com/CrashBytes/contentful-richtext-editor/actions/workflows/security-audit.yml/badge.svg)](https://github.com/CrashBytes/contentful-richtext-editor/actions/workflows/security-audit.yml)
+[![React Compatibility](https://github.com/CrashBytes/contentful-richtext-editor/actions/workflows/react-compat.yml/badge.svg)](https://github.com/CrashBytes/contentful-richtext-editor/actions/workflows/react-compat.yml)
+[![npm package provenance](https://img.shields.io/badge/provenance-tracked-brightgreen)](https://www.npmjs.com/package/@crashbytes/contentful-richtext-editor)
+
+A modern, Tiptap v3-based rich text editor that's fully compatible with Contentful's rich text format. Provides the same editing experience as Contentful's native editor while maintaining perfect compatibility with Contentful's document structure.
+
+## 🔒 Security & Trust
+
+- ✅ **Zero Known Vulnerabilities** - Automated security audits via Dependabot
+- ✅ **Supply Chain Security** - Package published with npm provenance via Trusted Publishing
+- ✅ **CodeQL Analysis** - Continuous security scanning for vulnerabilities
+- ✅ **React 18 & 19 Compatible** - Automated compatibility testing
+- ✅ **Dependency Review** - Automated PR checks for vulnerable dependencies
+
+See our [Security Policy](SECURITY.md) for vulnerability reporting.
 
 ## ✨ Features
 
 - ✅ **Full Contentful Compatibility** - Seamless conversion between Contentful and Tiptap formats
+- ✅ **Tiptap v3** - Built on the latest Tiptap v3 for better performance
 - ✅ **Modern UI** - Clean, intuitive interface matching Contentful's design
 - ✅ **TypeScript Support** - Complete type safety with Contentful's rich text types
-- ✅ **Extensible** - Built on Tiptap v2 for easy customization
+- ✅ **Extensible** - Built on Tiptap v3 for easy customization
 - ✅ **Lightweight** - Tree-shakeable, only import what you need
 - ✅ **Responsive** - Works on desktop and mobile devices
-- ✅ **Optional Border Control** - Customize editor appearance with `showBorder` prop _(New in v2.0.4)_
+- ✅ **Optional Border Control** - Customize editor appearance with `showBorder` prop
 
 ## 🚀 Installation
 
 ```bash
 npm install @crashbytes/contentful-richtext-editor
 ```
+
+**Peer Dependencies:**
+- React 18.3.1+ or React 19.x
+- React DOM 18.3.1+ or React 19.x
 
 ## 📖 Quick Start
 
@@ -50,7 +72,7 @@ function App() {
 export default App;
 ```
 
-## 🎨 Border Control (New in v2.0.4)
+## 🎨 Border Control
 
 Control the editor's border appearance with the `showBorder` prop:
 
@@ -147,7 +169,7 @@ function ContentfulEditor() {
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `showBorder` | `boolean` | `true` | Control editor border visibility _(New in v2.0.4)_ |
+| `showBorder` | `boolean` | `true` | Control editor border visibility |
 | `initialValue` | `Document` | `undefined` | Initial Contentful rich text document |
 | `onChange` | `(document: Document) => void` | `undefined` | Callback when content changes |
 | `onEmbedEntry` | `() => Promise<any> \| void` | `undefined` | Callback for embedding Contentful entries |
@@ -290,16 +312,48 @@ import type {
 
 ## 🔄 Migration
 
-### From v2.0.3 to v2.0.4
-No breaking changes! Simply update and optionally use the new `showBorder` prop:
+### From v2.x to v3.0.0
+
+**Good News:** The public API is unchanged! Upgrade with no code changes:
+
+```bash
+npm install @crashbytes/contentful-richtext-editor@latest
+```
+
+Your existing code continues to work:
 
 ```tsx
-// Before
-<ContentfulRichTextEditor />
-
-// After (optional)
-<ContentfulRichTextEditor showBorder={false} />
+// This still works exactly the same
+<ContentfulRichTextEditor
+  placeholder="Start writing..."
+  onChange={handleChange}
+  initialValue={content}
+/>
 ```
+
+**What Changed:** Internal upgrade to Tiptap v3 provides:
+- Better performance
+- Improved mobile support
+- Enhanced transaction handling
+- More efficient rendering
+
+See [CHANGELOG.md](CHANGELOG.md) for complete details.
+
+### From v2.0.3 to v2.0.4+
+No breaking changes! Simply update and optionally use the new `showBorder` prop.
+
+## 🔒 Security
+
+We take security seriously. This package:
+
+- ✅ **Automated Security Audits** - Weekly npm audit via GitHub Actions
+- ✅ **Dependabot** - Automated dependency updates for security patches
+- ✅ **CodeQL Analysis** - Advanced security vulnerability scanning
+- ✅ **Dependency Review** - Automated checks on every PR
+- ✅ **Trusted Publishing** - Package published with cryptographic provenance
+- ✅ **Supply Chain Verification** - npm provenance proves package source
+
+**Found a vulnerability?** Please report it via our [Security Policy](SECURITY.md).
 
 ## 🤝 Contributing
 
@@ -311,6 +365,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+All PRs automatically run:
+- Security audits
+- Dependency vulnerability checks
+- React 18 & 19 compatibility tests
+- Full test suite (175 tests)
+
 ## 📄 License
 
 MIT © [CrashBytes](https://github.com/CrashBytes)
@@ -319,13 +379,14 @@ MIT © [CrashBytes](https://github.com/CrashBytes)
 
 - [@contentful/rich-text-react-renderer](https://www.npmjs.com/package/@contentful/rich-text-react-renderer) - For rendering Contentful rich text
 - [@contentful/rich-text-types](https://www.npmjs.com/package/@contentful/rich-text-types) - Contentful rich text type definitions  
-- [@tiptap/react](https://www.npmjs.com/package/@tiptap/react) - The underlying editor framework
+- [@tiptap/react](https://www.npmjs.com/package/@tiptap/react) - The underlying editor framework (v3)
 
 ## 📈 Version History
 
+- **v3.0.0** - Upgraded to Tiptap v3.15.3, added security enhancements
+- **v2.0.6** - Dependency updates, bug fixes
 - **v2.0.4** - Added optional border control with `showBorder` prop
 - **v2.0.3** - Package made publicly accessible
-- **v2.0.2** - Previous release
 - **v2.0.0** - Major feature update with automatic configuration
 - **v1.x** - Initial releases
 

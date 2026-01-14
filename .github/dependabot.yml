@@ -1,0 +1,101 @@
+# Dependabot configuration for automated dependency updates
+# Documentation: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # Enable version updates for npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    
+    # Grouping strategy for cleaner PRs
+    groups:
+      # Group all Tiptap packages together
+      tiptap:
+        patterns:
+          - "@tiptap/*"
+        update-types:
+          - "minor"
+          - "patch"
+      
+      # Group all testing libraries together
+      testing:
+        patterns:
+          - "@testing-library/*"
+          - "jest*"
+          - "@types/jest"
+        update-types:
+          - "minor"
+          - "patch"
+      
+      # Group all Storybook packages together
+      storybook:
+        patterns:
+          - "@storybook/*"
+          - "storybook"
+        update-types:
+          - "minor"
+          - "patch"
+      
+      # Group TypeScript and build tools
+      build-tools:
+        patterns:
+          - "typescript"
+          - "rollup*"
+          - "@rollup/*"
+          - "tslib"
+        update-types:
+          - "minor"
+          - "patch"
+    
+    # Open pull requests for security updates immediately
+    open-pull-requests-limit: 10
+    
+    # Assignees and reviewers
+    assignees:
+      - "MichaelEakins"
+    
+    # Commit message prefix
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+      include: "scope"
+    
+    # PR labels
+    labels:
+      - "dependencies"
+      - "automated"
+    
+    # Allow both direct and indirect dependencies
+    ignore:
+      # Ignore major version updates (review manually)
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    
+    # Security updates take precedence
+    # Enable security updates for all dependencies
+    # (GitHub automatically creates PRs for security vulnerabilities)
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    
+    labels:
+      - "ci"
+      - "automated"
+    
+    assignees:
+      - "MichaelEakins"
