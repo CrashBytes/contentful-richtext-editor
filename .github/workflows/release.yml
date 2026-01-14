@@ -48,6 +48,8 @@ jobs:
 
       - name: Publish to npm with Provenance
         run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ''  # Explicitly unset to force OIDC authentication
         # OIDC authentication via GitHub Actions - no tokens needed!
 
       - name: Create GitHub Release
