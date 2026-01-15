@@ -48,7 +48,7 @@
     "react-dom": ">=16.8.0"
   },
   "dependencies": {
-    "@contentful/rich-text-types": "^16.8.5",
+    "@contentful/rich-text-types": "^17.2.5",
     "@tiptap/extension-link": "^3.15.3",
     "@tiptap/extension-table": "^3.15.3",
     "@tiptap/extension-table-cell": "^3.15.3",
