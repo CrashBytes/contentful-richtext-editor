@@ -50,7 +50,7 @@
   "dependencies": {
     "@contentful/rich-text-types": "^16.8.5",
     "@tiptap/extension-link": "^3.15.3",
-    "@tiptap/extension-table": "^3.15.3",
+    "@tiptap/extension-table": "^3.17.1",
     "@tiptap/extension-table-cell": "^3.15.3",
     "@tiptap/extension-table-header": "^3.15.3",
     "@tiptap/extension-table-row": "^3.15.3",
