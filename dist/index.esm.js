@@ -73,6 +73,10 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
+function getDefaultExportFromCjs (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+}
+
 var shim = {exports: {}};
 
 var useSyncExternalStoreShim_production = {};
@@ -14418,8 +14422,12 @@ var focus = (position = null, options = {}) => ({ editor, view, tr, dispatch }) 
       }
     });
   };
-  if (view.hasFocus() && position === null || position === false) {
-    return true;
+  try {
+    if (view.hasFocus() && position === null || position === false) {
+      return true;
+    }
+  } catch {
+    return false;
   }
   if (dispatch && position === null && !isTextSelection(editor.state.selection)) {
     delayedFocus();
@@ -15132,6 +15140,9 @@ function getAttributesFromExtensions(extensions) {
     keepOnSplit: true,
     isRequired: false
   };
+  const nodeExtensionTypes = nodeExtensions.filter((ext) => ext.name !== "text").map((ext) => ext.name);
+  const markExtensionTypes = markExtensions.map((ext) => ext.name);
+  const allExtensionTypes = [...nodeExtensionTypes, ...markExtensionTypes];
   extensions.forEach((extension) => {
     const context = {
       name: extension.name,
@@ -15149,7 +15160,19 @@ function getAttributesFromExtensions(extensions) {
     }
     const globalAttributes = addGlobalAttributes();
     globalAttributes.forEach((globalAttribute) => {
-      globalAttribute.types.forEach((type) => {
+      let resolvedTypes;
+      if (Array.isArray(globalAttribute.types)) {
+        resolvedTypes = globalAttribute.types;
+      } else if (globalAttribute.types === "*") {
+        resolvedTypes = allExtensionTypes;
+      } else if (globalAttribute.types === "nodes") {
+        resolvedTypes = nodeExtensionTypes;
+      } else if (globalAttribute.types === "marks") {
+        resolvedTypes = markExtensionTypes;
+      } else {
+        resolvedTypes = [];
+      }
+      resolvedTypes.forEach((type) => {
         Object.entries(globalAttribute.attributes).forEach(([name, attribute]) => {
           extensionAttributes.push({
             type,
@@ -15689,6 +15712,9 @@ function isMarkActive(state, typeOrName, attributes = {}) {
     const from = $from.pos;
     const to = $to.pos;
     state.doc.nodesBetween(from, to, (node, pos) => {
+      if (type && node.inlineContent && !node.type.allowsMarkType(type)) {
+        return false;
+      }
       if (!node.isText && !node.marks.length) {
         return;
       }
@@ -16718,7 +16744,7 @@ function inputRulesPlugin(props) {
 function getType(value) {
   return Object.prototype.toString.call(value).slice(8, -1);
 }
-function isPlainObject(value) {
+function isPlainObject$1(value) {
   if (getType(value) !== "Object") {
     return false;
   }
@@ -16728,9 +16754,9 @@ function isPlainObject(value) {
 // src/utilities/mergeDeep.ts
 function mergeDeep(target, source) {
   const output = { ...target };
-  if (isPlainObject(target) && isPlainObject(source)) {
+  if (isPlainObject$1(target) && isPlainObject$1(source)) {
     Object.keys(source).forEach((key) => {
-      if (isPlainObject(source[key]) && isPlainObject(target[key])) {
+      if (isPlainObject$1(source[key]) && isPlainObject$1(target[key])) {
         output[key] = mergeDeep(target[key], source[key]);
       } else {
         output[key] = source[key];
@@ -17248,6 +17274,39 @@ var ExtensionManager = class {
         dispatchTransaction.call(context, { transaction, next });
       };
     }, baseDispatch);
+  }
+  /**
+   * Get the composed transformPastedHTML function from all extensions.
+   * @param baseTransform The base transform function (e.g. from the editor props)
+   * @returns A composed transform function that chains all extension transforms
+   */
+  transformPastedHTML(baseTransform) {
+    const { editor } = this;
+    const extensions = sortExtensions([...this.extensions]);
+    return extensions.reduce(
+      (transform, extension) => {
+        const context = {
+          name: extension.name,
+          options: extension.options,
+          storage: this.editor.extensionStorage[extension.name],
+          editor,
+          type: getSchemaTypeByName(extension.name, this.schema)
+        };
+        const extensionTransform = getExtensionField(
+          extension,
+          "transformPastedHTML",
+          context
+        );
+        if (!extensionTransform) {
+          return transform;
+        }
+        return (html, view) => {
+          const transformedHtml = transform(html, view);
+          return extensionTransform.call(context, transformedHtml);
+        };
+      },
+      baseTransform || ((html) => html)
+    );
   }
   get markViews() {
     const { editor } = this;
@@ -17864,19 +17923,20 @@ var NodePos = class _NodePos {
     this.node.content.forEach((node, offset) => {
       const isBlock = node.isBlock && !node.isTextblock;
       const isNonTextAtom = node.isAtom && !node.isText;
+      const isInline = node.isInline;
       const targetPos = this.pos + offset + (isNonTextAtom ? 0 : 1);
       if (targetPos < 0 || targetPos > this.resolvedPos.doc.nodeSize - 2) {
         return;
       }
       const $pos = this.resolvedPos.doc.resolve(targetPos);
-      if (!isBlock && $pos.depth <= this.depth) {
+      if (!isBlock && !isInline && $pos.depth <= this.depth) {
         return;
       }
-      const childNodePos = new _NodePos($pos, this.editor, isBlock, isBlock ? node : null);
+      const childNodePos = new _NodePos($pos, this.editor, isBlock, isBlock || isInline ? node : null);
       if (isBlock) {
         childNodePos.actualDepth = this.depth + 1;
       }
-      children.push(new _NodePos($pos, this.editor, isBlock, isBlock ? node : null));
+      children.push(childNodePos);
     });
     return children;
   }
@@ -18243,7 +18303,7 @@ var Editor = class extends EventEmitter {
     return this.options.editable && this.view && this.view.editable;
   }
   /**
-   * Returns the editor state.
+   * Returns the editor view.
    */
   get view() {
     if (this.editorView) {
@@ -18411,6 +18471,8 @@ var Editor = class extends EventEmitter {
     const { editorProps, enableExtensionDispatchTransaction } = this.options;
     const baseDispatch = editorProps.dispatchTransaction || this.dispatchTransaction.bind(this);
     const dispatch = enableExtensionDispatchTransaction ? this.extensionManager.dispatchTransaction(baseDispatch) : baseDispatch;
+    const baseTransformPastedHTML = editorProps.transformPastedHTML;
+    const transformPastedHTML = this.extensionManager.transformPastedHTML(baseTransformPastedHTML);
     this.editorView = new EditorView(element, {
       ...editorProps,
       attributes: {
@@ -18419,6 +18481,7 @@ var Editor = class extends EventEmitter {
         ...editorProps == null ? void 0 : editorProps.attributes
       },
       dispatchTransaction: dispatch,
+      transformPastedHTML,
       state: this.editorState,
       markViews: this.extensionManager.markViews,
       nodeViews: this.extensionManager.nodeViews
@@ -20731,6 +20794,35 @@ React.forwardRef((props, ref) => {
 React.createContext({
   markViewContentRef: () => {
   }
+});
+var TiptapContext = createContext({
+  get editor() {
+    throw new Error("useTiptap must be used within a <Tiptap> provider");
+  }
+});
+TiptapContext.displayName = "TiptapContext";
+var useTiptap = () => useContext(TiptapContext);
+function TiptapWrapper({ editor, instance, children }) {
+  const resolvedEditor = editor != null ? editor : instance;
+  if (!resolvedEditor) {
+    throw new Error("Tiptap: An editor instance is required. Pass a non-null `editor` prop.");
+  }
+  const tiptapContextValue = useMemo(() => ({ editor: resolvedEditor }), [resolvedEditor]);
+  const legacyContextValue = useMemo(() => ({ editor: resolvedEditor }), [resolvedEditor]);
+  return /* @__PURE__ */ jsx(EditorContext.Provider, { value: legacyContextValue, children: /* @__PURE__ */ jsx(TiptapContext.Provider, { value: tiptapContextValue, children }) });
+}
+TiptapWrapper.displayName = "Tiptap";
+function TiptapContent({ ...rest }) {
+  const { editor } = useTiptap();
+  return /* @__PURE__ */ jsx(EditorContent, { editor, ...rest });
+}
+TiptapContent.displayName = "Tiptap.Content";
+Object.assign(TiptapWrapper, {
+  /**
+   * The Tiptap Content component that renders the EditorContent with the editor instance from the context.
+   * @see TiptapContent
+   */
+  Content: TiptapContent
 });
 
 // src/jsx-runtime.ts
@@ -23447,31 +23539,33 @@ function clickHandler(options) {
         if (!view.editable) {
           return false;
         }
+        let link = null;
+        if (event.target instanceof HTMLAnchorElement) {
+          link = event.target;
+        } else {
+          const target = event.target;
+          if (!target) {
+            return false;
+          }
+          const root = options.editor.view.dom;
+          link = target.closest("a");
+          if (link && !root.contains(link)) {
+            link = null;
+          }
+        }
+        if (!link) {
+          return false;
+        }
         let handled = false;
         if (options.enableClickSelection) {
           const commandResult = options.editor.commands.extendMarkRange(options.type.name);
           handled = commandResult;
         }
         if (options.openOnClick) {
-          let link = null;
-          if (event.target instanceof HTMLAnchorElement) {
-            link = event.target;
-          } else {
-            let a = event.target;
-            const els = [];
-            while (a.nodeName !== "DIV") {
-              els.push(a);
-              a = a.parentNode;
-            }
-            link = els.find((value) => value.nodeName === "A");
-          }
-          if (!link) {
-            return handled;
-          }
           const attrs = getAttributes(view.state, options.type.name);
-          const href = (_a = link == null ? void 0 : link.href) != null ? _a : attrs.href;
-          const target = (_b = link == null ? void 0 : link.target) != null ? _b : attrs.target;
-          if (link && href) {
+          const href = (_a = link.href) != null ? _a : attrs.href;
+          const target = (_b = link.target) != null ? _b : attrs.target;
+          if (href) {
             window.open(href, target);
             handled = true;
           }
@@ -23601,6 +23695,9 @@ var Link = Mark.create({
       },
       class: {
         default: this.options.HTMLAttributes.class
+      },
+      title: {
+        default: null
       }
     };
   },
@@ -23640,10 +23737,11 @@ var Link = Mark.create({
     });
   },
   renderMarkdown: (node, h) => {
-    var _a;
-    const href = ((_a = node.attrs) == null ? void 0 : _a.href) || "";
+    var _a, _b, _c, _d;
+    const href = (_b = (_a = node.attrs) == null ? void 0 : _a.href) != null ? _b : "";
+    const title = (_d = (_c = node.attrs) == null ? void 0 : _c.title) != null ? _d : "";
     const text = h.renderChildren(node);
-    return `[${text}](${href})`;
+    return title ? `[${text}](${href} "${title}")` : `[${text}](${href})`;
   },
   addCommands() {
     return {
@@ -23905,11 +24003,13 @@ var ListItem = Node3.create({
       node,
       h,
       (context) => {
+        var _a, _b;
         if (context.parentType === "bulletList") {
           return "- ";
         }
         if (context.parentType === "orderedList") {
-          return `${context.index + 1}. `;
+          const start = ((_b = (_a = context.meta) == null ? void 0 : _a.parentAttrs) == null ? void 0 : _b.start) || 1;
+          return `${start + context.index}. `;
         }
         return "- ";
       },
@@ -24801,6 +24901,8 @@ Extension.create({
 });
 
 // src/paragraph.ts
+var EMPTY_PARAGRAPH_MARKDOWN = "&nbsp;";
+var NBSP_CHAR = "\xA0";
 var Paragraph = Node3.create({
   name: "paragraph",
   priority: 1e3,
@@ -24822,18 +24924,21 @@ var Paragraph = Node3.create({
     if (tokens.length === 1 && tokens[0].type === "image") {
       return helpers.parseChildren([tokens[0]]);
     }
-    return helpers.createNode(
-      "paragraph",
-      void 0,
-      // no attributes for paragraph
-      helpers.parseInline(tokens)
-    );
+    const content = helpers.parseInline(tokens);
+    if (content.length === 1 && content[0].type === "text" && (content[0].text === EMPTY_PARAGRAPH_MARKDOWN || content[0].text === NBSP_CHAR)) {
+      return helpers.createNode("paragraph", void 0, []);
+    }
+    return helpers.createNode("paragraph", void 0, content);
   },
   renderMarkdown: (node, h) => {
-    if (!node || !Array.isArray(node.content)) {
+    if (!node) {
       return "";
     }
-    return h.renderChildren(node.content);
+    const content = Array.isArray(node.content) ? node.content : [];
+    if (content.length === 0) {
+      return EMPTY_PARAGRAPH_MARKDOWN;
+    }
+    return h.renderChildren(content);
   },
   addCommands() {
     return {
@@ -26183,12 +26288,17 @@ var Gapcursor = Extension.create({
     };
   }
 });
+var DEFAULT_DATA_ATTRIBUTE = "placeholder";
+function preparePlaceholderAttribute(attr) {
+  return attr.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-]/g, "").replace(/^[0-9-]+/, "").replace(/^-+/, "").toLowerCase();
+}
 Extension.create({
   name: "placeholder",
   addOptions() {
     return {
       emptyEditorClass: "is-editor-empty",
       emptyNodeClass: "is-empty",
+      dataAttribute: DEFAULT_DATA_ATTRIBUTE,
       placeholder: "Write something \u2026",
       showOnlyWhenEditable: true,
       showOnlyCurrent: true,
@@ -26196,6 +26306,7 @@ Extension.create({
     };
   },
   addProseMirrorPlugins() {
+    const dataAttribute = this.options.dataAttribute ? `data-${preparePlaceholderAttribute(this.options.dataAttribute)}` : `data-${DEFAULT_DATA_ATTRIBUTE}`;
     return [
       new Plugin({
         key: new PluginKey("placeholder"),
@@ -26218,7 +26329,7 @@ Extension.create({
                 }
                 const decoration = Decoration.node(pos, pos + node.nodeSize, {
                   class: classes.join(" "),
-                  "data-placeholder": typeof this.options.placeholder === "function" ? this.options.placeholder({
+                  [dataAttribute]: typeof this.options.placeholder === "function" ? this.options.placeholder({
                     editor: this.editor,
                     node,
                     pos,
@@ -29057,432 +29168,905 @@ var ContentfulToolbar = function (_a) {
                                                 }, autoFocus: true }), jsx("button", { onClick: handleLinkSubmit, title: "Apply link", children: "\u2713" }), jsx("button", { onClick: handleLinkCancel, title: "Cancel", children: "\u2717" })] }))] }))] })] })), (!isDisabled('lists') || !isDisabled('quote') || !isDisabled('table')) && (jsxs(Fragment$1, { children: [jsx("div", { className: "contentful-toolbar__separator" }), jsxs("div", { className: "contentful-toolbar__group", children: [!isDisabled('lists') && (jsxs(Fragment$1, { children: [jsx("button", { className: "contentful-toolbar__button ".concat(editor.isActive('bulletList') ? 'contentful-toolbar__button--active' : ''), onClick: function () { return editor.chain().focus().toggleBulletList().run(); }, title: "Bullet List", children: "\u2022 \u2261" }), jsx("button", { className: "contentful-toolbar__button ".concat(editor.isActive('orderedList') ? 'contentful-toolbar__button--active' : ''), onClick: function () { return editor.chain().focus().toggleOrderedList().run(); }, title: "Numbered List", children: "1. \u2261" })] })), !isDisabled('quote') && (jsx("button", { className: "contentful-toolbar__button ".concat(editor.isActive('blockquote') ? 'contentful-toolbar__button--active' : ''), onClick: function () { return editor.chain().focus().toggleBlockquote().run(); }, title: "Quote", children: "\"" })), jsx("button", { className: "contentful-toolbar__button", onClick: function () { return editor.chain().focus().setHorizontalRule().run(); }, title: "Horizontal Rule", children: "\u2014" }), !isDisabled('table') && (jsx("button", { className: "contentful-toolbar__button", onClick: insertTable, title: "Insert Table", children: "\u229E" }))] })] })), hasAnyEmbedOptions && !isDisabled('embed') && (jsxs(Fragment$1, { children: [jsx("div", { className: "contentful-toolbar__separator" }), jsx("div", { className: "contentful-toolbar__group contentful-toolbar__group--right", children: jsxs("div", { className: "contentful-toolbar__embed-dropdown", children: [jsx("button", { className: "contentful-toolbar__embed-button", children: "+ Embed \u25BC" }), jsxs("div", { className: "contentful-toolbar__embed-menu", children: [onEmbedEntry && (jsx("button", { className: "contentful-toolbar__embed-option", onClick: onEmbedEntry, children: "\uD83D\uDCC4 Entry" })), onEmbedInlineEntry && (jsx("button", { className: "contentful-toolbar__embed-option", onClick: onEmbedInlineEntry, children: "\uD83D\uDCDD Inline Entry" })), onEmbedAsset && (jsx("button", { className: "contentful-toolbar__embed-option", onClick: onEmbedAsset, children: "\uD83D\uDDBC\uFE0F Media" }))] })] }) })] }))] }));
 };
 
-var dist = {};
+var BLOCKS = /*#__PURE__*/ function(BLOCKS) {
+    BLOCKS["DOCUMENT"] = "document";
+    BLOCKS["PARAGRAPH"] = "paragraph";
+    BLOCKS["HEADING_1"] = "heading-1";
+    BLOCKS["HEADING_2"] = "heading-2";
+    BLOCKS["HEADING_3"] = "heading-3";
+    BLOCKS["HEADING_4"] = "heading-4";
+    BLOCKS["HEADING_5"] = "heading-5";
+    BLOCKS["HEADING_6"] = "heading-6";
+    BLOCKS["OL_LIST"] = "ordered-list";
+    BLOCKS["UL_LIST"] = "unordered-list";
+    BLOCKS["LIST_ITEM"] = "list-item";
+    BLOCKS["HR"] = "hr";
+    BLOCKS["QUOTE"] = "blockquote";
+    BLOCKS["EMBEDDED_ENTRY"] = "embedded-entry-block";
+    BLOCKS["EMBEDDED_ASSET"] = "embedded-asset-block";
+    BLOCKS["EMBEDDED_RESOURCE"] = "embedded-resource-block";
+    BLOCKS["TABLE"] = "table";
+    BLOCKS["TABLE_ROW"] = "table-row";
+    BLOCKS["TABLE_CELL"] = "table-cell";
+    BLOCKS["TABLE_HEADER_CELL"] = "table-header-cell";
+    return BLOCKS;
+}({});
 
-var blocks = {};
+var INLINES = /*#__PURE__*/ function(INLINES) {
+    INLINES["ASSET_HYPERLINK"] = "asset-hyperlink";
+    INLINES["EMBEDDED_ENTRY"] = "embedded-entry-inline";
+    INLINES["EMBEDDED_RESOURCE"] = "embedded-resource-inline";
+    INLINES["ENTRY_HYPERLINK"] = "entry-hyperlink";
+    INLINES["HYPERLINK"] = "hyperlink";
+    INLINES["RESOURCE_HYPERLINK"] = "resource-hyperlink";
+    return INLINES;
+}({});
 
-var hasRequiredBlocks;
+var MARKS = /*#__PURE__*/ function(MARKS) {
+    MARKS["BOLD"] = "bold";
+    MARKS["ITALIC"] = "italic";
+    MARKS["UNDERLINE"] = "underline";
+    MARKS["CODE"] = "code";
+    MARKS["SUPERSCRIPT"] = "superscript";
+    MARKS["SUBSCRIPT"] = "subscript";
+    MARKS["STRIKETHROUGH"] = "strikethrough";
+    return MARKS;
+}({});
 
-function requireBlocks () {
-	if (hasRequiredBlocks) return blocks;
-	hasRequiredBlocks = 1;
-	Object.defineProperty(blocks, "__esModule", { value: true });
-	blocks.BLOCKS = void 0;
-	/**
-	 * Map of all Contentful block types. Blocks contain inline or block nodes.
-	 */
-	var BLOCKS;
-	(function (BLOCKS) {
-	    BLOCKS["DOCUMENT"] = "document";
-	    BLOCKS["PARAGRAPH"] = "paragraph";
-	    BLOCKS["HEADING_1"] = "heading-1";
-	    BLOCKS["HEADING_2"] = "heading-2";
-	    BLOCKS["HEADING_3"] = "heading-3";
-	    BLOCKS["HEADING_4"] = "heading-4";
-	    BLOCKS["HEADING_5"] = "heading-5";
-	    BLOCKS["HEADING_6"] = "heading-6";
-	    BLOCKS["OL_LIST"] = "ordered-list";
-	    BLOCKS["UL_LIST"] = "unordered-list";
-	    BLOCKS["LIST_ITEM"] = "list-item";
-	    BLOCKS["HR"] = "hr";
-	    BLOCKS["QUOTE"] = "blockquote";
-	    BLOCKS["EMBEDDED_ENTRY"] = "embedded-entry-block";
-	    BLOCKS["EMBEDDED_ASSET"] = "embedded-asset-block";
-	    BLOCKS["EMBEDDED_RESOURCE"] = "embedded-resource-block";
-	    BLOCKS["TABLE"] = "table";
-	    BLOCKS["TABLE_ROW"] = "table-row";
-	    BLOCKS["TABLE_CELL"] = "table-cell";
-	    BLOCKS["TABLE_HEADER_CELL"] = "table-header-cell";
-	})(BLOCKS || (blocks.BLOCKS = BLOCKS = {}));
-	
-	return blocks;
+function _array_like_to_array$4(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+    for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
+    return arr2;
 }
-
-var inlines = {};
-
-var hasRequiredInlines;
-
-function requireInlines () {
-	if (hasRequiredInlines) return inlines;
-	hasRequiredInlines = 1;
-	Object.defineProperty(inlines, "__esModule", { value: true });
-	inlines.INLINES = void 0;
-	/**
-	 * Map of all Contentful inline types. Inline contain inline or text nodes.
-	 *
-	 * @note This should be kept in alphabetical order since the
-	 * [validation package](https://github.com/contentful/content-stack/tree/master/packages/validation)
-	 *  relies on the values being in a predictable order.
-	 */
-	var INLINES;
-	(function (INLINES) {
-	    INLINES["ASSET_HYPERLINK"] = "asset-hyperlink";
-	    INLINES["EMBEDDED_ENTRY"] = "embedded-entry-inline";
-	    INLINES["EMBEDDED_RESOURCE"] = "embedded-resource-inline";
-	    INLINES["ENTRY_HYPERLINK"] = "entry-hyperlink";
-	    INLINES["HYPERLINK"] = "hyperlink";
-	    INLINES["RESOURCE_HYPERLINK"] = "resource-hyperlink";
-	})(INLINES || (inlines.INLINES = INLINES = {}));
-	
-	return inlines;
+function _array_without_holes$4(arr) {
+    if (Array.isArray(arr)) return _array_like_to_array$4(arr);
 }
-
-var marks = {};
-
-var hasRequiredMarks;
-
-function requireMarks () {
-	if (hasRequiredMarks) return marks;
-	hasRequiredMarks = 1;
-	Object.defineProperty(marks, "__esModule", { value: true });
-	marks.MARKS = void 0;
-	/**
-	 * Map of all Contentful marks.
-	 */
-	var MARKS;
-	(function (MARKS) {
-	    MARKS["BOLD"] = "bold";
-	    MARKS["ITALIC"] = "italic";
-	    MARKS["UNDERLINE"] = "underline";
-	    MARKS["CODE"] = "code";
-	    MARKS["SUPERSCRIPT"] = "superscript";
-	    MARKS["SUBSCRIPT"] = "subscript";
-	    MARKS["STRIKETHROUGH"] = "strikethrough";
-	})(MARKS || (marks.MARKS = MARKS = {}));
-	
-	return marks;
+function _define_property$3(obj, key, value) {
+    if (key in obj) {
+        Object.defineProperty(obj, key, {
+            value: value,
+            enumerable: true,
+            configurable: true,
+            writable: true
+        });
+    } else {
+        obj[key] = value;
+    }
+    return obj;
 }
-
-var schemaConstraints = {};
-
-var hasRequiredSchemaConstraints;
-
-function requireSchemaConstraints () {
-	if (hasRequiredSchemaConstraints) return schemaConstraints;
-	hasRequiredSchemaConstraints = 1;
-	(function (exports$1) {
-		var __spreadArray = (schemaConstraints && schemaConstraints.__spreadArray) || function (to, from, pack) {
-		    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-		        if (ar || !(i in from)) {
-		            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-		            ar[i] = from[i];
-		        }
-		    }
-		    return to.concat(ar || Array.prototype.slice.call(from));
-		};
-		var _a;
-		Object.defineProperty(exports$1, "__esModule", { value: true });
-		exports$1.V1_MARKS = exports$1.V1_NODE_TYPES = exports$1.TEXT_CONTAINERS = exports$1.HEADINGS = exports$1.CONTAINERS = exports$1.VOID_BLOCKS = exports$1.TABLE_BLOCKS = exports$1.LIST_ITEM_BLOCKS = exports$1.TOP_LEVEL_BLOCKS = void 0;
-		var blocks_1 = requireBlocks();
-		var inlines_1 = requireInlines();
-		var marks_1 = requireMarks();
-		/**
-		 * Array of all top level block types.
-		 * Only these block types can be the direct children of the document.
-		 */
-		exports$1.TOP_LEVEL_BLOCKS = [
-		    blocks_1.BLOCKS.PARAGRAPH,
-		    blocks_1.BLOCKS.HEADING_1,
-		    blocks_1.BLOCKS.HEADING_2,
-		    blocks_1.BLOCKS.HEADING_3,
-		    blocks_1.BLOCKS.HEADING_4,
-		    blocks_1.BLOCKS.HEADING_5,
-		    blocks_1.BLOCKS.HEADING_6,
-		    blocks_1.BLOCKS.OL_LIST,
-		    blocks_1.BLOCKS.UL_LIST,
-		    blocks_1.BLOCKS.HR,
-		    blocks_1.BLOCKS.QUOTE,
-		    blocks_1.BLOCKS.EMBEDDED_ENTRY,
-		    blocks_1.BLOCKS.EMBEDDED_ASSET,
-		    blocks_1.BLOCKS.EMBEDDED_RESOURCE,
-		    blocks_1.BLOCKS.TABLE,
-		];
-		/**
-		 * Array of all allowed block types inside list items
-		 */
-		exports$1.LIST_ITEM_BLOCKS = [
-		    blocks_1.BLOCKS.PARAGRAPH,
-		    blocks_1.BLOCKS.HEADING_1,
-		    blocks_1.BLOCKS.HEADING_2,
-		    blocks_1.BLOCKS.HEADING_3,
-		    blocks_1.BLOCKS.HEADING_4,
-		    blocks_1.BLOCKS.HEADING_5,
-		    blocks_1.BLOCKS.HEADING_6,
-		    blocks_1.BLOCKS.OL_LIST,
-		    blocks_1.BLOCKS.UL_LIST,
-		    blocks_1.BLOCKS.HR,
-		    blocks_1.BLOCKS.QUOTE,
-		    blocks_1.BLOCKS.EMBEDDED_ENTRY,
-		    blocks_1.BLOCKS.EMBEDDED_ASSET,
-		    blocks_1.BLOCKS.EMBEDDED_RESOURCE,
-		];
-		exports$1.TABLE_BLOCKS = [
-		    blocks_1.BLOCKS.TABLE,
-		    blocks_1.BLOCKS.TABLE_ROW,
-		    blocks_1.BLOCKS.TABLE_CELL,
-		    blocks_1.BLOCKS.TABLE_HEADER_CELL,
-		];
-		/**
-		 * Array of all void block types
-		 */
-		exports$1.VOID_BLOCKS = [
-		    blocks_1.BLOCKS.HR,
-		    blocks_1.BLOCKS.EMBEDDED_ENTRY,
-		    blocks_1.BLOCKS.EMBEDDED_ASSET,
-		    blocks_1.BLOCKS.EMBEDDED_RESOURCE,
-		];
-		/**
-		 * Dictionary of all container block types, and the set block types they accept as children.
-		 *
-		 * Note: This does not include `[BLOCKS.DOCUMENT]: TOP_LEVEL_BLOCKS`
-		 */
-		exports$1.CONTAINERS = (_a = {},
-		    _a[blocks_1.BLOCKS.OL_LIST] = [blocks_1.BLOCKS.LIST_ITEM],
-		    _a[blocks_1.BLOCKS.UL_LIST] = [blocks_1.BLOCKS.LIST_ITEM],
-		    _a[blocks_1.BLOCKS.LIST_ITEM] = exports$1.LIST_ITEM_BLOCKS,
-		    _a[blocks_1.BLOCKS.QUOTE] = [blocks_1.BLOCKS.PARAGRAPH],
-		    _a[blocks_1.BLOCKS.TABLE] = [blocks_1.BLOCKS.TABLE_ROW],
-		    _a[blocks_1.BLOCKS.TABLE_ROW] = [blocks_1.BLOCKS.TABLE_CELL, blocks_1.BLOCKS.TABLE_HEADER_CELL],
-		    _a[blocks_1.BLOCKS.TABLE_CELL] = [blocks_1.BLOCKS.PARAGRAPH, blocks_1.BLOCKS.UL_LIST, blocks_1.BLOCKS.OL_LIST],
-		    _a[blocks_1.BLOCKS.TABLE_HEADER_CELL] = [blocks_1.BLOCKS.PARAGRAPH],
-		    _a);
-		/**
-		 * Array of all heading levels
-		 */
-		exports$1.HEADINGS = [
-		    blocks_1.BLOCKS.HEADING_1,
-		    blocks_1.BLOCKS.HEADING_2,
-		    blocks_1.BLOCKS.HEADING_3,
-		    blocks_1.BLOCKS.HEADING_4,
-		    blocks_1.BLOCKS.HEADING_5,
-		    blocks_1.BLOCKS.HEADING_6,
-		];
-		/**
-		 * Array of all block types that may contain text and inline nodes.
-		 */
-		exports$1.TEXT_CONTAINERS = __spreadArray([blocks_1.BLOCKS.PARAGRAPH], exports$1.HEADINGS, true);
-		/**
-		 * Node types before `tables` release.
-		 */
-		exports$1.V1_NODE_TYPES = [
-		    blocks_1.BLOCKS.DOCUMENT,
-		    blocks_1.BLOCKS.PARAGRAPH,
-		    blocks_1.BLOCKS.HEADING_1,
-		    blocks_1.BLOCKS.HEADING_2,
-		    blocks_1.BLOCKS.HEADING_3,
-		    blocks_1.BLOCKS.HEADING_4,
-		    blocks_1.BLOCKS.HEADING_5,
-		    blocks_1.BLOCKS.HEADING_6,
-		    blocks_1.BLOCKS.OL_LIST,
-		    blocks_1.BLOCKS.UL_LIST,
-		    blocks_1.BLOCKS.LIST_ITEM,
-		    blocks_1.BLOCKS.HR,
-		    blocks_1.BLOCKS.QUOTE,
-		    blocks_1.BLOCKS.EMBEDDED_ENTRY,
-		    blocks_1.BLOCKS.EMBEDDED_ASSET,
-		    inlines_1.INLINES.HYPERLINK,
-		    inlines_1.INLINES.ENTRY_HYPERLINK,
-		    inlines_1.INLINES.ASSET_HYPERLINK,
-		    inlines_1.INLINES.EMBEDDED_ENTRY,
-		    'text',
-		];
-		/**
-		 * Marks before `superscript` & `subscript` release.
-		 */
-		exports$1.V1_MARKS = [marks_1.MARKS.BOLD, marks_1.MARKS.CODE, marks_1.MARKS.ITALIC, marks_1.MARKS.UNDERLINE];
-		
-	} (schemaConstraints));
-	return schemaConstraints;
+function _iterable_to_array$4(iter) {
+    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
 }
-
-var types = {};
-
-var hasRequiredTypes;
-
-function requireTypes () {
-	if (hasRequiredTypes) return types;
-	hasRequiredTypes = 1;
-	Object.defineProperty(types, "__esModule", { value: true });
-	
-	return types;
+function _non_iterable_spread$4() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
-
-var nodeTypes = {};
-
-var hasRequiredNodeTypes;
-
-function requireNodeTypes () {
-	if (hasRequiredNodeTypes) return nodeTypes;
-	hasRequiredNodeTypes = 1;
-	Object.defineProperty(nodeTypes, "__esModule", { value: true });
-	
-	return nodeTypes;
+function _to_consumable_array$4(arr) {
+    return _array_without_holes$4(arr) || _iterable_to_array$4(arr) || _unsupported_iterable_to_array$4(arr) || _non_iterable_spread$4();
 }
+function _unsupported_iterable_to_array$4(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _array_like_to_array$4(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(n);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _array_like_to_array$4(o, minLen);
+}
+var TOP_LEVEL_BLOCKS = [
+    BLOCKS.PARAGRAPH,
+    BLOCKS.HEADING_1,
+    BLOCKS.HEADING_2,
+    BLOCKS.HEADING_3,
+    BLOCKS.HEADING_4,
+    BLOCKS.HEADING_5,
+    BLOCKS.HEADING_6,
+    BLOCKS.OL_LIST,
+    BLOCKS.UL_LIST,
+    BLOCKS.HR,
+    BLOCKS.QUOTE,
+    BLOCKS.EMBEDDED_ENTRY,
+    BLOCKS.EMBEDDED_ASSET,
+    BLOCKS.EMBEDDED_RESOURCE,
+    BLOCKS.TABLE
+];
+var LIST_ITEM_BLOCKS = [
+    BLOCKS.PARAGRAPH,
+    BLOCKS.HEADING_1,
+    BLOCKS.HEADING_2,
+    BLOCKS.HEADING_3,
+    BLOCKS.HEADING_4,
+    BLOCKS.HEADING_5,
+    BLOCKS.HEADING_6,
+    BLOCKS.OL_LIST,
+    BLOCKS.UL_LIST,
+    BLOCKS.HR,
+    BLOCKS.QUOTE,
+    BLOCKS.EMBEDDED_ENTRY,
+    BLOCKS.EMBEDDED_ASSET,
+    BLOCKS.EMBEDDED_RESOURCE
+];
+[
+    BLOCKS.TABLE,
+    BLOCKS.TABLE_ROW,
+    BLOCKS.TABLE_CELL,
+    BLOCKS.TABLE_HEADER_CELL
+];
+[
+    BLOCKS.HR,
+    BLOCKS.EMBEDDED_ENTRY,
+    BLOCKS.EMBEDDED_ASSET,
+    BLOCKS.EMBEDDED_RESOURCE
+];
+var _obj$1;
+var CONTAINERS = (_obj$1 = {}, _define_property$3(_obj$1, BLOCKS.OL_LIST, [
+    BLOCKS.LIST_ITEM
+]), _define_property$3(_obj$1, BLOCKS.UL_LIST, [
+    BLOCKS.LIST_ITEM
+]), _define_property$3(_obj$1, BLOCKS.LIST_ITEM, LIST_ITEM_BLOCKS), _define_property$3(_obj$1, BLOCKS.QUOTE, [
+    BLOCKS.PARAGRAPH
+]), _define_property$3(_obj$1, BLOCKS.TABLE, [
+    BLOCKS.TABLE_ROW
+]), _define_property$3(_obj$1, BLOCKS.TABLE_ROW, [
+    BLOCKS.TABLE_CELL,
+    BLOCKS.TABLE_HEADER_CELL
+]), _define_property$3(_obj$1, BLOCKS.TABLE_CELL, [
+    BLOCKS.PARAGRAPH,
+    BLOCKS.UL_LIST,
+    BLOCKS.OL_LIST
+]), _define_property$3(_obj$1, BLOCKS.TABLE_HEADER_CELL, [
+    BLOCKS.PARAGRAPH
+]), _obj$1);
+var HEADINGS = [
+    BLOCKS.HEADING_1,
+    BLOCKS.HEADING_2,
+    BLOCKS.HEADING_3,
+    BLOCKS.HEADING_4,
+    BLOCKS.HEADING_5,
+    BLOCKS.HEADING_6
+];
+[
+    BLOCKS.PARAGRAPH
+].concat(_to_consumable_array$4(HEADINGS));
+[
+    BLOCKS.DOCUMENT,
+    BLOCKS.PARAGRAPH,
+    BLOCKS.HEADING_1,
+    BLOCKS.HEADING_2,
+    BLOCKS.HEADING_3,
+    BLOCKS.HEADING_4,
+    BLOCKS.HEADING_5,
+    BLOCKS.HEADING_6,
+    BLOCKS.OL_LIST,
+    BLOCKS.UL_LIST,
+    BLOCKS.LIST_ITEM,
+    BLOCKS.HR,
+    BLOCKS.QUOTE,
+    BLOCKS.EMBEDDED_ENTRY,
+    BLOCKS.EMBEDDED_ASSET,
+    INLINES.HYPERLINK,
+    INLINES.ENTRY_HYPERLINK,
+    INLINES.ASSET_HYPERLINK,
+    INLINES.EMBEDDED_ENTRY,
+    'text'
+];
+[
+    MARKS.BOLD,
+    MARKS.CODE,
+    MARKS.ITALIC,
+    MARKS.UNDERLINE
+];
 
-var emptyDocument = {};
+({
+    nodeType: BLOCKS.DOCUMENT,
+    content: [
+        {
+            nodeType: BLOCKS.PARAGRAPH,
+            data: {},
+            content: [
+                {
+                    nodeType: 'text',
+                    value: '',
+                    marks: [],
+                    data: {}
+                }
+            ]
+        }
+    ]
+});
 
-var hasRequiredEmptyDocument;
+var isPlainObj;
+var hasRequiredIsPlainObj;
 
-function requireEmptyDocument () {
-	if (hasRequiredEmptyDocument) return emptyDocument;
-	hasRequiredEmptyDocument = 1;
-	Object.defineProperty(emptyDocument, "__esModule", { value: true });
-	emptyDocument.EMPTY_DOCUMENT = void 0;
-	var blocks_1 = requireBlocks();
-	/**
-	 * A rich text document considered to be empty.
-	 * Any other document structure than this is not considered empty.
-	 */
-	emptyDocument.EMPTY_DOCUMENT = {
-	    nodeType: blocks_1.BLOCKS.DOCUMENT,
-	    data: {},
-	    content: [
-	        {
-	            nodeType: blocks_1.BLOCKS.PARAGRAPH,
-	            data: {},
-	            content: [
-	                {
-	                    nodeType: 'text',
-	                    value: '',
-	                    marks: [],
-	                    data: {},
-	                },
-	            ],
-	        },
-	    ],
+function requireIsPlainObj () {
+	if (hasRequiredIsPlainObj) return isPlainObj;
+	hasRequiredIsPlainObj = 1;
+
+	isPlainObj = value => {
+		if (Object.prototype.toString.call(value) !== '[object Object]') {
+			return false;
+		}
+
+		const prototype = Object.getPrototypeOf(value);
+		return prototype === null || prototype === Object.prototype;
 	};
-	
-	return emptyDocument;
+	return isPlainObj;
 }
 
-var helpers = {};
+var isPlainObjExports = requireIsPlainObj();
+var isPlainObject = /*@__PURE__*/getDefaultExportFromCjs(isPlainObjExports);
 
-var hasRequiredHelpers;
-
-function requireHelpers () {
-	if (hasRequiredHelpers) return helpers;
-	hasRequiredHelpers = 1;
-	Object.defineProperty(helpers, "__esModule", { value: true });
-	helpers.isInline = isInline;
-	helpers.isBlock = isBlock;
-	helpers.isText = isText;
-	var blocks_1 = requireBlocks();
-	var inlines_1 = requireInlines();
-	/**
-	 * Tiny replacement for Object.values(object).includes(key) to
-	 * avoid including CoreJS polyfills
-	 */
-	function hasValue(obj, value) {
-	    for (var _i = 0, _a = Object.keys(obj); _i < _a.length; _i++) {
-	        var key = _a[_i];
-	        if (value === obj[key]) {
-	            return true;
-	        }
-	    }
-	    return false;
-	}
-	/**
-	 * Checks if the node is an instance of Inline.
-	 */
-	function isInline(node) {
-	    return hasValue(inlines_1.INLINES, node.nodeType);
-	}
-	/**
-	 * Checks if the node is an instance of Block.
-	 */
-	function isBlock(node) {
-	    return hasValue(blocks_1.BLOCKS, node.nodeType);
-	}
-	/**
-	 * Checks if the node is an instance of Text.
-	 */
-	function isText(node) {
-	    return node.nodeType === 'text';
-	}
-	
-	return helpers;
+function _array_like_to_array$3(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+    for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
+    return arr2;
 }
-
-function commonjsRequire(path) {
-	throw new Error('Could not dynamically require "' + path + '". Please configure the dynamicRequireTargets or/and ignoreDynamicRequires option of @rollup/plugin-commonjs appropriately for this require call to work.');
+function _array_without_holes$3(arr) {
+    if (Array.isArray(arr)) return _array_like_to_array$3(arr);
 }
-
-var schemas = {};
-
-var hasRequiredSchemas;
-
-function requireSchemas () {
-	if (hasRequiredSchemas) return schemas;
-	hasRequiredSchemas = 1;
-	Object.defineProperty(schemas, "__esModule", { value: true });
-	schemas.getSchemaWithNodeType = getSchemaWithNodeType;
-	function getSchemaWithNodeType(nodeType) {
-	    try {
-	        return commonjsRequire("./generated/".concat(nodeType, ".json"));
-	    }
-	    catch (error) {
-	        throw new Error("Schema for nodeType \"".concat(nodeType, "\" was not found."));
-	    }
-	}
-	
-	return schemas;
+function _iterable_to_array$3(iter) {
+    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
 }
-
-var hasRequiredDist;
-
-function requireDist () {
-	if (hasRequiredDist) return dist;
-	hasRequiredDist = 1;
-	(function (exports$1) {
-		var __createBinding = (dist && dist.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-		    if (k2 === undefined) k2 = k;
-		    var desc = Object.getOwnPropertyDescriptor(m, k);
-		    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-		      desc = { enumerable: true, get: function() { return m[k]; } };
-		    }
-		    Object.defineProperty(o, k2, desc);
-		}) : (function(o, m, k, k2) {
-		    if (k2 === undefined) k2 = k;
-		    o[k2] = m[k];
-		}));
-		var __setModuleDefault = (dist && dist.__setModuleDefault) || (Object.create ? (function(o, v) {
-		    Object.defineProperty(o, "default", { enumerable: true, value: v });
-		}) : function(o, v) {
-		    o["default"] = v;
-		});
-		var __exportStar = (dist && dist.__exportStar) || function(m, exports$1) {
-		    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports$1, p)) __createBinding(exports$1, m, p);
-		};
-		var __importStar = (dist && dist.__importStar) || function (mod) {
-		    if (mod && mod.__esModule) return mod;
-		    var result = {};
-		    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-		    __setModuleDefault(result, mod);
-		    return result;
-		};
-		Object.defineProperty(exports$1, "__esModule", { value: true });
-		exports$1.getSchemaWithNodeType = exports$1.helpers = exports$1.EMPTY_DOCUMENT = exports$1.MARKS = exports$1.INLINES = exports$1.BLOCKS = void 0;
-		var blocks_1 = requireBlocks();
-		Object.defineProperty(exports$1, "BLOCKS", { enumerable: true, get: function () { return blocks_1.BLOCKS; } });
-		var inlines_1 = requireInlines();
-		Object.defineProperty(exports$1, "INLINES", { enumerable: true, get: function () { return inlines_1.INLINES; } });
-		var marks_1 = requireMarks();
-		Object.defineProperty(exports$1, "MARKS", { enumerable: true, get: function () { return marks_1.MARKS; } });
-		__exportStar(requireSchemaConstraints(), exports$1);
-		__exportStar(requireTypes(), exports$1);
-		__exportStar(requireNodeTypes(), exports$1);
-		var emptyDocument_1 = requireEmptyDocument();
-		Object.defineProperty(exports$1, "EMPTY_DOCUMENT", { enumerable: true, get: function () { return emptyDocument_1.EMPTY_DOCUMENT; } });
-		var helpers = __importStar(requireHelpers());
-		exports$1.helpers = helpers;
-		var schemas_1 = requireSchemas();
-		Object.defineProperty(exports$1, "getSchemaWithNodeType", { enumerable: true, get: function () { return schemas_1.getSchemaWithNodeType; } });
-		
-	} (dist));
-	return dist;
+function _non_iterable_spread$3() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
+function _to_consumable_array$3(arr) {
+    return _array_without_holes$3(arr) || _iterable_to_array$3(arr) || _unsupported_iterable_to_array$3(arr) || _non_iterable_spread$3();
+}
+function _unsupported_iterable_to_array$3(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _array_like_to_array$3(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(n);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _array_like_to_array$3(o, minLen);
+}
+var typeMismatchError = function(param) {
+    var path = param.path, property = param.property, typeName = param.typeName, value = param.value;
+    return {
+        details: 'The type of "'.concat(property, '" is incorrect, expected type: ').concat(typeName),
+        name: 'type',
+        path: path.toArray(),
+        type: typeName,
+        value: value
+    };
+};
+var minSizeError = function(param) {
+    var min = param.min, value = param.value, path = param.path;
+    return {
+        name: 'size',
+        min: min,
+        path: path.toArray(),
+        details: "Size must be at least ".concat(min),
+        value: value
+    };
+};
+var maxSizeError = function(param) {
+    var max = param.max, value = param.value, path = param.path;
+    return {
+        name: 'size',
+        max: max,
+        path: path.toArray(),
+        details: "Size must be at most ".concat(max),
+        value: value
+    };
+};
+var enumError = function(param) {
+    var expected = param.expected, value = param.value, path = param.path;
+    return {
+        details: "Value must be one of expected values",
+        name: 'in',
+        expected: _to_consumable_array$3(expected).sort(),
+        path: path.toArray(),
+        value: value
+    };
+};
+var unknownPropertyError = function(param) {
+    var property = param.property, path = param.path;
+    return {
+        details: 'The property "'.concat(property, '" is not expected'),
+        name: 'unexpected',
+        path: path.toArray()
+    };
+};
+var requiredPropertyError = function(param) {
+    var property = param.property, path = param.path;
+    return {
+        details: 'The property "'.concat(property, '" is required here'),
+        name: 'required',
+        path: path.toArray()
+    };
+};
 
-var distExports = requireDist();
+function _array_like_to_array$2(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+    for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
+    return arr2;
+}
+function _array_without_holes$2(arr) {
+    if (Array.isArray(arr)) return _array_like_to_array$2(arr);
+}
+function _class_call_check$1(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+        throw new TypeError("Cannot call a class as a function");
+    }
+}
+function _defineProperties$1(target, props) {
+    for(var i = 0; i < props.length; i++){
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+    }
+}
+function _create_class$1(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties$1(Constructor.prototype, protoProps);
+    return Constructor;
+}
+function _define_property$2(obj, key, value) {
+    if (key in obj) {
+        Object.defineProperty(obj, key, {
+            value: value,
+            enumerable: true,
+            configurable: true,
+            writable: true
+        });
+    } else {
+        obj[key] = value;
+    }
+    return obj;
+}
+function _iterable_to_array$2(iter) {
+    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
+}
+function _non_iterable_spread$2() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+function _to_consumable_array$2(arr) {
+    return _array_without_holes$2(arr) || _iterable_to_array$2(arr) || _unsupported_iterable_to_array$2(arr) || _non_iterable_spread$2();
+}
+function _unsupported_iterable_to_array$2(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _array_like_to_array$2(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(n);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _array_like_to_array$2(o, minLen);
+}
+var ObjectAssertion = /*#__PURE__*/ function() {
+    function ObjectAssertion(obj, path) {
+        var _this = this;
+        var _this1 = this;
+        _class_call_check$1(this, ObjectAssertion);
+        _define_property$2(this, "obj", void 0);
+        _define_property$2(this, "path", void 0);
+        _define_property$2(this, "_errors", void 0);
+        _define_property$2(this, "catch", void 0);
+        _define_property$2(this, "exists", void 0);
+        _define_property$2(this, "object", void 0);
+        _define_property$2(this, "string", void 0);
+        _define_property$2(this, "number", void 0);
+        _define_property$2(this, "array", void 0);
+        _define_property$2(this, "enum", void 0);
+        _define_property$2(this, "empty", void 0);
+        _define_property$2(this, "minLength", void 0);
+        _define_property$2(this, "noAdditionalProperties", void 0);
+        _define_property$2(this, "each", void 0);
+        this.obj = obj;
+        this.path = path;
+        this._errors = [];
+        this.catch = function() {
+            for(var _len = arguments.length, errors = new Array(_len), _key = 0; _key < _len; _key++){
+                errors[_key] = arguments[_key];
+            }
+            var _this__errors;
+            (_this__errors = _this1._errors).push.apply(_this__errors, _to_consumable_array$2(errors));
+        };
+        this.exists = function(key) {
+            if (key in _this.obj) {
+                return true;
+            }
+            _this.catch(requiredPropertyError({
+                property: key,
+                path: _this.path.of(key)
+            }));
+            return false;
+        };
+        this.object = function(key) {
+            var value = key ? _this.obj[key] : _this.obj;
+            if (key) {
+                if (!_this.exists(key)) {
+                    return false;
+                }
+            }
+            if (isPlainObject(value)) {
+                return true;
+            }
+            var _$path = key ? _this.path.of(key) : _this.path;
+            var _ref;
+            var property = (_ref = key !== null && key !== void 0 ? key : _this.path.last()) !== null && _ref !== void 0 ? _ref : 'value';
+            _this.catch(typeMismatchError({
+                typeName: 'Object',
+                property: property,
+                path: _$path,
+                value: value
+            }));
+            return false;
+        };
+        this.string = function(key) {
+            var value = _this.obj[key];
+            if (key && !_this.exists(key)) {
+                return false;
+            }
+            if (typeof value === 'string') {
+                return true;
+            }
+            _this.catch(typeMismatchError({
+                typeName: 'String',
+                property: key,
+                path: _this.path.of(key),
+                value: value
+            }));
+            return false;
+        };
+        this.number = function(key, optional) {
+            var value = _this.obj[key];
+            if (optional && !(key in _this.obj)) {
+                return true;
+            }
+            if (!_this.exists(key)) {
+                return false;
+            }
+            if (typeof value === 'number' && !Number.isNaN(value)) {
+                return true;
+            }
+            _this.catch(typeMismatchError({
+                typeName: 'Number',
+                property: key,
+                path: _this.path.of(key),
+                value: value
+            }));
+            return false;
+        };
+        this.array = function(key) {
+            var value = _this.obj[key];
+            if (key && !_this.exists(key)) {
+                return false;
+            }
+            if (Array.isArray(value)) {
+                return true;
+            }
+            _this.catch(typeMismatchError({
+                typeName: 'Array',
+                property: key,
+                path: _this.path.of(key),
+                value: value
+            }));
+            return false;
+        };
+        this.enum = function(key, expected) {
+            var value = _this.obj[key];
+            if (typeof value === 'string' && expected.includes(value)) {
+                return true;
+            }
+            _this.catch(enumError({
+                expected: expected,
+                value: value,
+                path: _this.path.of(key)
+            }));
+            return false;
+        };
+        this.empty = function(key) {
+            if (!_this.array(key)) {
+                return false;
+            }
+            var value = _this.obj[key];
+            if (value.length === 0) {
+                return true;
+            }
+            _this.catch(maxSizeError({
+                max: 0,
+                value: value,
+                path: _this.path.of(key)
+            }));
+            return false;
+        };
+        this.minLength = function(key, min) {
+            if (!_this.array(key)) {
+                return false;
+            }
+            var value = _this.obj[key];
+            if (value.length >= min) {
+                return true;
+            }
+            _this.catch(minSizeError({
+                min: min,
+                value: value,
+                path: _this.path.of(key)
+            }));
+            return false;
+        };
+        this.noAdditionalProperties = function(properties) {
+            var unknowns = Object.keys(_this.obj).sort().filter(function(key) {
+                return !properties.includes(key);
+            });
+            unknowns.forEach(function(property) {
+                return _this.catch(unknownPropertyError({
+                    property: property,
+                    path: _this.path.of(property)
+                }));
+            });
+            return unknowns.length === 0;
+        };
+        this.each = function(key, assert) {
+            if (!_this.array(key)) {
+                return;
+            }
+            var value = _this.obj[key];
+            var foundErrors = false;
+            value.forEach(function(item, index) {
+                if (foundErrors) {
+                    return;
+                }
+                var errors = assert(item, _this.path.of(key).of(index));
+                if (errors.length > 0) {
+                    foundErrors = true;
+                }
+                _this.catch.apply(_this, _to_consumable_array$2(errors));
+            });
+        };
+    }
+    _create_class$1(ObjectAssertion, [
+        {
+            key: "errors",
+            get: function get() {
+                var _this = this;
+                var serializeError = function(error) {
+                    return JSON.stringify({
+                        details: error.details,
+                        path: error.path
+                    });
+                };
+                return this._errors.filter(function(error, index) {
+                    return _this._errors.findIndex(function(step) {
+                        return serializeError(error) === serializeError(step);
+                    }) === index;
+                });
+            }
+        }
+    ]);
+    return ObjectAssertion;
+}();
+
+function _array_like_to_array$1(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+    for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
+    return arr2;
+}
+function _array_without_holes$1(arr) {
+    if (Array.isArray(arr)) return _array_like_to_array$1(arr);
+}
+function _assert_this_initialized(self) {
+    if (self === void 0) {
+        throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+    return self;
+}
+function _call_super(_this, derived, args) {
+    derived = _get_prototype_of(derived);
+    return _possible_constructor_return(_this, _is_native_reflect_construct() ? Reflect.construct(derived, args || [], _get_prototype_of(_this).constructor) : derived.apply(_this, args));
+}
+function _class_call_check(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+        throw new TypeError("Cannot call a class as a function");
+    }
+}
+function _defineProperties(target, props) {
+    for(var i = 0; i < props.length; i++){
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+    }
+}
+function _create_class(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    return Constructor;
+}
+function _define_property$1(obj, key, value) {
+    if (key in obj) {
+        Object.defineProperty(obj, key, {
+            value: value,
+            enumerable: true,
+            configurable: true,
+            writable: true
+        });
+    } else {
+        obj[key] = value;
+    }
+    return obj;
+}
+function _get_prototype_of(o) {
+    _get_prototype_of = Object.setPrototypeOf ? Object.getPrototypeOf : function getPrototypeOf(o) {
+        return o.__proto__ || Object.getPrototypeOf(o);
+    };
+    return _get_prototype_of(o);
+}
+function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+        throw new TypeError("Super expression must either be null or a function");
+    }
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+        constructor: {
+            value: subClass,
+            writable: true,
+            configurable: true
+        }
+    });
+    if (superClass) _set_prototype_of(subClass, superClass);
+}
+function _iterable_to_array$1(iter) {
+    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
+}
+function _non_iterable_spread$1() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+function _possible_constructor_return(self, call) {
+    if (call && (_type_of(call) === "object" || typeof call === "function")) {
+        return call;
+    }
+    return _assert_this_initialized(self);
+}
+function _set_prototype_of(o, p) {
+    _set_prototype_of = Object.setPrototypeOf || function setPrototypeOf(o, p) {
+        o.__proto__ = p;
+        return o;
+    };
+    return _set_prototype_of(o, p);
+}
+function _to_consumable_array$1(arr) {
+    return _array_without_holes$1(arr) || _iterable_to_array$1(arr) || _unsupported_iterable_to_array$1(arr) || _non_iterable_spread$1();
+}
+function _type_of(obj) {
+    "@swc/helpers - typeof";
+    return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj;
+}
+function _unsupported_iterable_to_array$1(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _array_like_to_array$1(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(n);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _array_like_to_array$1(o, minLen);
+}
+function _is_native_reflect_construct() {
+    try {
+        var result = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function() {}));
+    } catch (_) {}
+    return (_is_native_reflect_construct = function() {
+        return !!result;
+    })();
+}
+var VOID_CONTENT = [];
+var NodeAssertion = /*#__PURE__*/ function() {
+    function NodeAssertion(contentRule, validateData) {
+        _class_call_check(this, NodeAssertion);
+        _define_property$1(this, "contentRule", void 0);
+        _define_property$1(this, "validateData", void 0);
+        this.contentRule = contentRule;
+        this.validateData = validateData;
+    }
+    _create_class(NodeAssertion, [
+        {
+            key: "assert",
+            value: function assert(node, path) {
+                var $ = new ObjectAssertion(node, path);
+                if (!$.object()) {
+                    return $.errors;
+                }
+                $.noAdditionalProperties([
+                    'nodeType',
+                    'data',
+                    'content'
+                ]);
+                var _ref = Array.isArray(this.contentRule) ? {
+                    nodeTypes: this.contentRule
+                } : this.contentRule(node, path), nodeTypes = _ref.nodeTypes, _ref_min = _ref.min, min = _ref_min === void 0 ? 0 : _ref_min;
+                if (nodeTypes.length === 0 && min > 0) {
+                    throw new Error("Invalid content rule. Cannot have enforce a 'min' of ".concat(min, " with no nodeTypes"));
+                }
+                $.minLength('content', min);
+                if (nodeTypes.length === 0) {
+                    $.empty('content');
+                } else {
+                    $.each('content', function(item, path) {
+                        var item$ = new ObjectAssertion(item, path);
+                        if (!item$.object()) {
+                            return item$.errors;
+                        }
+                        item$.enum('nodeType', nodeTypes);
+                        return item$.errors;
+                    });
+                }
+                if ($.object('data')) {
+                    var _$;
+                    var _this_validateData, _this;
+                    var _this_validateData1;
+                    var dataErrors = (_this_validateData1 = (_this_validateData = (_this = this).validateData) === null || _this_validateData === void 0 ? void 0 : _this_validateData.call(_this, node.data, path.of('data'))) !== null && _this_validateData1 !== void 0 ? _this_validateData1 : [];
+                    (_$ = $).catch.apply(_$, _to_consumable_array$1(dataErrors));
+                }
+                return $.errors;
+            }
+        }
+    ]);
+    return NodeAssertion;
+}();
+var EntityLinkAssertion = /*#__PURE__*/ function(NodeAssertion) {
+    _inherits(EntityLinkAssertion, NodeAssertion);
+    function EntityLinkAssertion(linkType, contentNodeTypes) {
+        _class_call_check(this, EntityLinkAssertion);
+        var _this;
+        _this = _call_super(this, EntityLinkAssertion, [
+            contentNodeTypes,
+            function(data, path) {
+                return _assert_this_initialized(_this).assertLink(data, path);
+            }
+        ]), _define_property$1(_this, "linkType", void 0), _define_property$1(_this, "type", void 0), _define_property$1(_this, "assertLink", void 0), _this.linkType = linkType, _this.assertLink = function(data, path) {
+            var $ = new ObjectAssertion(data, path);
+            if ($.object('target')) {
+                var _$;
+                var sys$ = new ObjectAssertion(data.target.sys, path.of('target').of('sys'));
+                if (sys$.object()) {
+                    sys$.enum('type', [
+                        _this.type
+                    ]);
+                    sys$.enum('linkType', [
+                        _this.linkType
+                    ]);
+                    if (_this.type === 'Link') {
+                        sys$.string('id');
+                        sys$.noAdditionalProperties([
+                            'type',
+                            'linkType',
+                            'id'
+                        ]);
+                    } else if (_this.type === 'ResourceLink') {
+                        sys$.string('urn');
+                        sys$.noAdditionalProperties([
+                            'type',
+                            'linkType',
+                            'urn'
+                        ]);
+                    }
+                }
+                (_$ = $).catch.apply(_$, _to_consumable_array$1(sys$.errors));
+            }
+            $.noAdditionalProperties([
+                'target'
+            ]);
+            return $.errors;
+        };
+        _this.type = _this.linkType.startsWith('Contentful:') ? 'ResourceLink' : 'Link';
+        return _this;
+    }
+    return EntityLinkAssertion;
+}(NodeAssertion);
+var HyperLinkAssertion = /*#__PURE__*/ function(NodeAssertion) {
+    _inherits(HyperLinkAssertion, NodeAssertion);
+    function HyperLinkAssertion() {
+        _class_call_check(this, HyperLinkAssertion);
+        var _this;
+        _this = _call_super(this, HyperLinkAssertion, [
+            [
+                'text'
+            ],
+            function(data, path) {
+                return _assert_this_initialized(_this).assertLink(data, path);
+            }
+        ]), _define_property$1(_this, "assertLink", function(data, path) {
+            var $ = new ObjectAssertion(data, path);
+            $.string('uri');
+            $.noAdditionalProperties([
+                'uri'
+            ]);
+            return $.errors;
+        });
+        return _this;
+    }
+    return HyperLinkAssertion;
+}(NodeAssertion);
+var assert = function(contentRule, validateData) {
+    return new NodeAssertion(contentRule, validateData);
+};
+var assertLink = function(linkType, contentRule) {
+    return new EntityLinkAssertion(linkType, contentRule);
+};
+
+function _array_like_to_array(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+    for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
+    return arr2;
+}
+function _array_without_holes(arr) {
+    if (Array.isArray(arr)) return _array_like_to_array(arr);
+}
+function _define_property(obj, key, value) {
+    if (key in obj) {
+        Object.defineProperty(obj, key, {
+            value: value,
+            enumerable: true,
+            configurable: true,
+            writable: true
+        });
+    } else {
+        obj[key] = value;
+    }
+    return obj;
+}
+function _iterable_to_array(iter) {
+    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
+}
+function _non_iterable_spread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+function _to_consumable_array(arr) {
+    return _array_without_holes(arr) || _iterable_to_array(arr) || _unsupported_iterable_to_array(arr) || _non_iterable_spread();
+}
+function _unsupported_iterable_to_array(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _array_like_to_array(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(n);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _array_like_to_array(o, minLen);
+}
+var assertInlineOrText = assert(_to_consumable_array(Object.values(INLINES)).concat([
+    'text'
+]).sort());
+var assertList = assert([
+    BLOCKS.LIST_ITEM
+]);
+var assertVoidEntryLink = assertLink('Entry', VOID_CONTENT);
+var assertTableCell = assert(function() {
+    return {
+        nodeTypes: [
+            BLOCKS.PARAGRAPH
+        ],
+        min: 1
+    };
+}, function(data, path) {
+    var $ = new ObjectAssertion(data, path);
+    $.noAdditionalProperties([
+        'colspan',
+        'rowspan'
+    ]);
+    $.number('colspan', true);
+    $.number('rowspan', true);
+    return $.errors;
+});
+var _obj;
+(_obj = {}, _define_property(_obj, BLOCKS.DOCUMENT, assert(TOP_LEVEL_BLOCKS)), _define_property(_obj, BLOCKS.PARAGRAPH, assertInlineOrText), _define_property(_obj, BLOCKS.HEADING_1, assertInlineOrText), _define_property(_obj, BLOCKS.HEADING_2, assertInlineOrText), _define_property(_obj, BLOCKS.HEADING_3, assertInlineOrText), _define_property(_obj, BLOCKS.HEADING_4, assertInlineOrText), _define_property(_obj, BLOCKS.HEADING_5, assertInlineOrText), _define_property(_obj, BLOCKS.HEADING_6, assertInlineOrText), _define_property(_obj, BLOCKS.QUOTE, assert(CONTAINERS[BLOCKS.QUOTE])), _define_property(_obj, BLOCKS.EMBEDDED_ENTRY, assertVoidEntryLink), _define_property(_obj, BLOCKS.EMBEDDED_ASSET, assertLink('Asset', VOID_CONTENT)), _define_property(_obj, BLOCKS.EMBEDDED_RESOURCE, assertLink('Contentful:Entry', VOID_CONTENT)), _define_property(_obj, BLOCKS.HR, assert(VOID_CONTENT)), _define_property(_obj, BLOCKS.OL_LIST, assertList), _define_property(_obj, BLOCKS.UL_LIST, assertList), _define_property(_obj, BLOCKS.LIST_ITEM, assert(_to_consumable_array(LIST_ITEM_BLOCKS).sort())), _define_property(_obj, BLOCKS.TABLE, assert(function() {
+    return {
+        nodeTypes: [
+            BLOCKS.TABLE_ROW
+        ],
+        min: 1
+    };
+})), _define_property(_obj, BLOCKS.TABLE_ROW, assert(function() {
+    return {
+        nodeTypes: [
+            BLOCKS.TABLE_CELL,
+            BLOCKS.TABLE_HEADER_CELL
+        ],
+        min: 1
+    };
+})), _define_property(_obj, BLOCKS.TABLE_CELL, assertTableCell), _define_property(_obj, BLOCKS.TABLE_HEADER_CELL, assertTableCell), _define_property(_obj, INLINES.HYPERLINK, new HyperLinkAssertion()), _define_property(_obj, INLINES.EMBEDDED_ENTRY, assertVoidEntryLink), _define_property(_obj, INLINES.EMBEDDED_RESOURCE, assertLink('Contentful:Entry', VOID_CONTENT)), _define_property(_obj, INLINES.ENTRY_HYPERLINK, assertLink('Entry', [
+    'text'
+])), _define_property(_obj, INLINES.ASSET_HYPERLINK, assertLink('Asset', [
+    'text'
+])), _define_property(_obj, INLINES.RESOURCE_HYPERLINK, assertLink('Contentful:Entry', [
+    'text'
+])), _obj);
 
 /**
  * Converts a Contentful Rich Text Document to Tiptap JSON format
@@ -29491,97 +30075,97 @@ var contentfulToTiptap = function (document) {
     var convertNode = function (node) {
         var _a, _b, _c, _d, _e, _f, _g;
         switch (node.nodeType) {
-            case distExports.BLOCKS.DOCUMENT:
+            case BLOCKS.DOCUMENT:
                 return {
                     type: 'doc',
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.PARAGRAPH:
+            case BLOCKS.PARAGRAPH:
                 return {
                     type: 'paragraph',
                     content: node.content ? node.content.map(function (child) { return convertNode(child); }).flat() : [],
                 };
-            case distExports.BLOCKS.HEADING_1:
+            case BLOCKS.HEADING_1:
                 return {
                     type: 'heading',
                     attrs: { level: 1 },
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.HEADING_2:
+            case BLOCKS.HEADING_2:
                 return {
                     type: 'heading',
                     attrs: { level: 2 },
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.HEADING_3:
+            case BLOCKS.HEADING_3:
                 return {
                     type: 'heading',
                     attrs: { level: 3 },
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.HEADING_4:
+            case BLOCKS.HEADING_4:
                 return {
                     type: 'heading',
                     attrs: { level: 4 },
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.HEADING_5:
+            case BLOCKS.HEADING_5:
                 return {
                     type: 'heading',
                     attrs: { level: 5 },
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.HEADING_6:
+            case BLOCKS.HEADING_6:
                 return {
                     type: 'heading',
                     attrs: { level: 6 },
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.UL_LIST:
+            case BLOCKS.UL_LIST:
                 return {
                     type: 'bulletList',
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.OL_LIST:
+            case BLOCKS.OL_LIST:
                 return {
                     type: 'orderedList',
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.LIST_ITEM:
+            case BLOCKS.LIST_ITEM:
                 return {
                     type: 'listItem',
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.QUOTE:
+            case BLOCKS.QUOTE:
                 return {
                     type: 'blockquote',
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.HR:
+            case BLOCKS.HR:
                 return {
                     type: 'horizontalRule',
                 };
-            case distExports.BLOCKS.TABLE:
+            case BLOCKS.TABLE:
                 return {
                     type: 'table',
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.TABLE_ROW:
+            case BLOCKS.TABLE_ROW:
                 return {
                     type: 'tableRow',
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.TABLE_CELL:
+            case BLOCKS.TABLE_CELL:
                 return {
                     type: 'tableCell',
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.BLOCKS.TABLE_HEADER_CELL:
+            case BLOCKS.TABLE_HEADER_CELL:
                 return {
                     type: 'tableHeader',
                     content: node.content.map(function (child) { return convertNode(child); }).flat(),
                 };
-            case distExports.INLINES.HYPERLINK:
+            case INLINES.HYPERLINK:
                 return {
                     type: 'text',
                     text: node.content.map(function (child) {
@@ -29594,14 +30178,14 @@ var contentfulToTiptap = function (document) {
                         },
                     ],
                 };
-            case distExports.INLINES.EMBEDDED_ENTRY:
+            case INLINES.EMBEDDED_ENTRY:
                 // Inline embedded entry
                 return {
                     type: 'text',
                     text: "[Inline Entry: ".concat(((_b = (_a = node.data.target) === null || _a === void 0 ? void 0 : _a.sys) === null || _b === void 0 ? void 0 : _b.id) || 'Unknown', "]"),
                     marks: [{ type: 'bold' }],
                 };
-            case distExports.BLOCKS.EMBEDDED_ENTRY:
+            case BLOCKS.EMBEDDED_ENTRY:
                 return {
                     type: 'paragraph',
                     content: [
@@ -29612,7 +30196,7 @@ var contentfulToTiptap = function (document) {
                         },
                     ],
                 };
-            case distExports.BLOCKS.EMBEDDED_ASSET:
+            case BLOCKS.EMBEDDED_ASSET:
                 return {
                     type: 'paragraph',
                     content: [
@@ -29627,13 +30211,13 @@ var contentfulToTiptap = function (document) {
                 var textNode = node;
                 var marks = ((_g = textNode.marks) === null || _g === void 0 ? void 0 : _g.map(function (mark) {
                     switch (mark.type) {
-                        case distExports.MARKS.BOLD:
+                        case MARKS.BOLD:
                             return { type: 'bold' };
-                        case distExports.MARKS.ITALIC:
+                        case MARKS.ITALIC:
                             return { type: 'italic' };
-                        case distExports.MARKS.UNDERLINE:
+                        case MARKS.UNDERLINE:
                             return { type: 'underline' };
-                        case distExports.MARKS.CODE:
+                        case MARKS.CODE:
                             return { type: 'code' };
                         default:
                             return null;
@@ -29663,27 +30247,27 @@ var tiptapToContentful = function (tiptapDoc) {
         switch (node.type) {
             case 'doc':
                 return {
-                    nodeType: distExports.BLOCKS.DOCUMENT,
+                    nodeType: BLOCKS.DOCUMENT,
                     data: {},
                     content: (_a = node.content) === null || _a === void 0 ? void 0 : _a.map(function (child) { return convertNode(child); }),
                 };
             case 'paragraph':
                 return {
-                    nodeType: distExports.BLOCKS.PARAGRAPH,
+                    nodeType: BLOCKS.PARAGRAPH,
                     data: {},
                     content: (_b = node.content) === null || _b === void 0 ? void 0 : _b.map(function (child) { return convertNode(child); }),
                 };
             case 'heading':
                 var level = ((_c = node.attrs) === null || _c === void 0 ? void 0 : _c.level) || 1;
                 var headingTypes = {
-                    1: distExports.BLOCKS.HEADING_1,
-                    2: distExports.BLOCKS.HEADING_2,
-                    3: distExports.BLOCKS.HEADING_3,
-                    4: distExports.BLOCKS.HEADING_4,
-                    5: distExports.BLOCKS.HEADING_5,
-                    6: distExports.BLOCKS.HEADING_6,
+                    1: BLOCKS.HEADING_1,
+                    2: BLOCKS.HEADING_2,
+                    3: BLOCKS.HEADING_3,
+                    4: BLOCKS.HEADING_4,
+                    5: BLOCKS.HEADING_5,
+                    6: BLOCKS.HEADING_6,
                 };
-                var headingType = headingTypes[level] || distExports.BLOCKS.HEADING_1;
+                var headingType = headingTypes[level] || BLOCKS.HEADING_1;
                 return {
                     nodeType: headingType,
                     data: {},
@@ -29691,55 +30275,55 @@ var tiptapToContentful = function (tiptapDoc) {
                 };
             case 'bulletList':
                 return {
-                    nodeType: distExports.BLOCKS.UL_LIST,
+                    nodeType: BLOCKS.UL_LIST,
                     data: {},
                     content: (_e = node.content) === null || _e === void 0 ? void 0 : _e.map(function (child) { return convertNode(child); }),
                 };
             case 'orderedList':
                 return {
-                    nodeType: distExports.BLOCKS.OL_LIST,
+                    nodeType: BLOCKS.OL_LIST,
                     data: {},
                     content: (_f = node.content) === null || _f === void 0 ? void 0 : _f.map(function (child) { return convertNode(child); }),
                 };
             case 'listItem':
                 return {
-                    nodeType: distExports.BLOCKS.LIST_ITEM,
+                    nodeType: BLOCKS.LIST_ITEM,
                     data: {},
                     content: (_g = node.content) === null || _g === void 0 ? void 0 : _g.map(function (child) { return convertNode(child); }),
                 };
             case 'blockquote':
                 return {
-                    nodeType: distExports.BLOCKS.QUOTE,
+                    nodeType: BLOCKS.QUOTE,
                     data: {},
                     content: (_h = node.content) === null || _h === void 0 ? void 0 : _h.map(function (child) { return convertNode(child); }),
                 };
             case 'horizontalRule':
                 return {
-                    nodeType: distExports.BLOCKS.HR,
+                    nodeType: BLOCKS.HR,
                     data: {},
                     content: [],
                 };
             case 'table':
                 return {
-                    nodeType: distExports.BLOCKS.TABLE,
+                    nodeType: BLOCKS.TABLE,
                     data: {},
                     content: (_j = node.content) === null || _j === void 0 ? void 0 : _j.map(function (child) { return convertNode(child); }),
                 };
             case 'tableRow':
                 return {
-                    nodeType: distExports.BLOCKS.TABLE_ROW,
+                    nodeType: BLOCKS.TABLE_ROW,
                     data: {},
                     content: (_k = node.content) === null || _k === void 0 ? void 0 : _k.map(function (child) { return convertNode(child); }),
                 };
             case 'tableCell':
                 return {
-                    nodeType: distExports.BLOCKS.TABLE_CELL,
+                    nodeType: BLOCKS.TABLE_CELL,
                     data: {},
                     content: (_l = node.content) === null || _l === void 0 ? void 0 : _l.map(function (child) { return convertNode(child); }),
                 };
             case 'tableHeader':
                 return {
-                    nodeType: distExports.BLOCKS.TABLE_HEADER_CELL,
+                    nodeType: BLOCKS.TABLE_HEADER_CELL,
                     data: {},
                     content: (_m = node.content) === null || _m === void 0 ? void 0 : _m.map(function (child) { return convertNode(child); }),
                 };
@@ -29747,13 +30331,13 @@ var tiptapToContentful = function (tiptapDoc) {
                 var marks = ((_o = node.marks) === null || _o === void 0 ? void 0 : _o.map(function (mark) {
                     switch (mark.type) {
                         case 'bold':
-                            return { type: distExports.MARKS.BOLD };
+                            return { type: MARKS.BOLD };
                         case 'italic':
-                            return { type: distExports.MARKS.ITALIC };
+                            return { type: MARKS.ITALIC };
                         case 'underline':
-                            return { type: distExports.MARKS.UNDERLINE };
+                            return { type: MARKS.UNDERLINE };
                         case 'code':
-                            return { type: distExports.MARKS.CODE };
+                            return { type: MARKS.CODE };
                         case 'link':
                             return null; // Links are handled separately
                         default:
@@ -29764,7 +30348,7 @@ var tiptapToContentful = function (tiptapDoc) {
                 var linkMark = (_p = node.marks) === null || _p === void 0 ? void 0 : _p.find(function (mark) { return mark.type === 'link'; });
                 if (linkMark) {
                     return {
-                        nodeType: distExports.INLINES.HYPERLINK,
+                        nodeType: INLINES.HYPERLINK,
                         data: {
                             uri: ((_q = linkMark.attrs) === null || _q === void 0 ? void 0 : _q.href) || '',
                         },
@@ -29785,7 +30369,7 @@ var tiptapToContentful = function (tiptapDoc) {
                     var match = node.text.match(/\[Inline Entry:\s*([^\]]+)\]/);
                     var entryId = match ? match[1].trim() : 'Unknown';
                     return {
-                        nodeType: distExports.INLINES.EMBEDDED_ENTRY,
+                        nodeType: INLINES.EMBEDDED_ENTRY,
                         data: {
                             target: {
                                 sys: {
@@ -29807,7 +30391,7 @@ var tiptapToContentful = function (tiptapDoc) {
             default:
                 console.warn("Unknown Tiptap node type: ".concat(node.type));
                 return {
-                    nodeType: distExports.BLOCKS.PARAGRAPH,
+                    nodeType: BLOCKS.PARAGRAPH,
                     data: {},
                     content: [],
                 };
@@ -29822,7 +30406,7 @@ var validateContentfulDocument = function (document) {
     if (!document || typeof document !== 'object') {
         return false;
     }
-    if (document.nodeType !== distExports.BLOCKS.DOCUMENT) {
+    if (document.nodeType !== BLOCKS.DOCUMENT) {
         return false;
     }
     if (!Array.isArray(document.content)) {
@@ -29834,11 +30418,11 @@ var validateContentfulDocument = function (document) {
  * Creates an empty Contentful document
  */
 var createEmptyDocument = function () { return ({
-    nodeType: distExports.BLOCKS.DOCUMENT,
+    nodeType: BLOCKS.DOCUMENT,
     data: {},
     content: [
         {
-            nodeType: distExports.BLOCKS.PARAGRAPH,
+            nodeType: BLOCKS.PARAGRAPH,
             data: {},
             content: [],
         },
@@ -29854,11 +30438,11 @@ var sanitizeContentfulDocument = function (document, allowedNodeTypes, allowedMa
         if (!allowedNodeTypes.includes(node.nodeType)) {
             // Convert to paragraph if it's a block that's not allowed
             if (node.nodeType.startsWith('heading-') ||
-                node.nodeType === distExports.BLOCKS.QUOTE ||
-                node.nodeType === distExports.BLOCKS.UL_LIST ||
-                node.nodeType === distExports.BLOCKS.OL_LIST) {
+                node.nodeType === BLOCKS.QUOTE ||
+                node.nodeType === BLOCKS.UL_LIST ||
+                node.nodeType === BLOCKS.OL_LIST) {
                 return {
-                    nodeType: distExports.BLOCKS.PARAGRAPH,
+                    nodeType: BLOCKS.PARAGRAPH,
                     data: {},
                     content: (_a = node.content) === null || _a === void 0 ? void 0 : _a.map(function (child) { return sanitizeNode(child); }).filter(Boolean),
                 };
@@ -29911,17 +30495,17 @@ var findEmbeddedContent = function (document) {
     var inlineEntries = [];
     var searchNode = function (node) {
         var _a, _b, _c, _d, _e, _f;
-        if (node.nodeType === distExports.BLOCKS.EMBEDDED_ENTRY) {
+        if (node.nodeType === BLOCKS.EMBEDDED_ENTRY) {
             var entryId = (_b = (_a = node.data.target) === null || _a === void 0 ? void 0 : _a.sys) === null || _b === void 0 ? void 0 : _b.id;
             if (entryId)
                 entries.push(entryId);
         }
-        else if (node.nodeType === distExports.BLOCKS.EMBEDDED_ASSET) {
+        else if (node.nodeType === BLOCKS.EMBEDDED_ASSET) {
             var assetId = (_d = (_c = node.data.target) === null || _c === void 0 ? void 0 : _c.sys) === null || _d === void 0 ? void 0 : _d.id;
             if (assetId)
                 assets.push(assetId);
         }
-        else if (node.nodeType === distExports.INLINES.EMBEDDED_ENTRY) {
+        else if (node.nodeType === INLINES.EMBEDDED_ENTRY) {
             var entryId = (_f = (_e = node.data.target) === null || _e === void 0 ? void 0 : _e.sys) === null || _f === void 0 ? void 0 : _f.id;
             if (entryId)
                 inlineEntries.push(entryId);
@@ -30314,8 +30898,5 @@ var ContentfulRichTextEditor = function (_a) {
     return (jsxs("div", { className: editorClass, children: [!readonly && (jsx(ContentfulToolbar, { editor: editor, onEmbedEntry: onEmbedEntry && editorConfig.allowEmbeddedEntries ? handleEmbedEntry : undefined, onEmbedAsset: onEmbedAsset && editorConfig.allowEmbeddedAssets ? handleEmbedAsset : undefined, onEmbedInlineEntry: onEmbedInlineEntry && editorConfig.allowInlineEntries ? handleEmbedInlineEntry : undefined, disabledFeatures: editorConfig.disabledFeatures, availableHeadings: editorConfig.availableHeadings, availableMarks: editorConfig.availableMarks, allowHyperlinks: editorConfig.allowHyperlinks })), jsx("div", { className: "contentful-editor__content-wrapper", children: jsx(EditorContent, { editor: editor, className: "contentful-editor__content", "data-testid": "editor-content" }) })] }));
 };
 
-var BLOCKS = distExports.BLOCKS;
-var INLINES = distExports.INLINES;
-var MARKS = distExports.MARKS;
 export { BLOCKS, ContentfulRichTextEditor, ContentfulToolbar, INLINES, MARKS, contentfulToTiptap, countWords, createEmptyDocument, createMockFieldConfig, extractPlainText, fetchContentfulFieldConfig, findEmbeddedContent, parseContentfulFieldConfig, sanitizeContentfulDocument, tiptapToContentful, validateContentfulDocument };
 //# sourceMappingURL=index.esm.js.map

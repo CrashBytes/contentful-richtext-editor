@@ -1,6 +1,6 @@
 {
   "name": "@crashbytes/contentful-richtext-editor",
-  "version": "3.0.2",
+  "version": "3.1.0",
   "description": "A Tiptap-based rich text editor compatible with Contentful's rich text format",
   "type": "module",
   "main": "dist/index.js",
@@ -64,13 +64,13 @@
     "@babel/preset-env": "^7.29.0",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
-    "@rollup/plugin-babel": "^6.1.0",
+    "@rollup/plugin-babel": "^7.0.0",
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-typescript": "^12.3.0",
-    "@storybook/addon-docs": "^10.2.13",
-    "@storybook/addon-links": "^10.2.13",
-    "@storybook/react-vite": "^10.2.13",
+    "@storybook/addon-docs": "^10.3.6",
+    "@storybook/addon-links": "^10.3.6",
+    "@storybook/react-vite": "^10.3.6",
     "@storybook/testing-library": "^0.2.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -87,9 +87,9 @@
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-postcss": "^4.0.2",
     "standard-version": "^9.5.0",
-    "storybook": "^10.2.13",
-    "ts-jest": "^29.4.6",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "storybook": "^10.3.6",
+    "ts-jest": "^29.4.9",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.10"
   }
 }

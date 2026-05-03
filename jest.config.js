@@ -8,10 +8,14 @@ export default {
 
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
+      isolatedModules: true,
       tsconfig: {
         jsx: 'react-jsx',
         esModuleInterop: true,
         allowSyntheticDefaultImports: true,
+        types: ['jest', 'node'],
+        noImplicitAny: false,
+        ignoreDeprecations: '6.0',
       },
     }],
   },
