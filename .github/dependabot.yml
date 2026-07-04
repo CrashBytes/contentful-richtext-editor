@@ -27,7 +27,13 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    
+    ignore:
+      # Babel 8 majors require bumping @babel/core and all presets together;
+      # solo bumps fail npm peer resolution. Remove when doing a coordinated
+      # Babel 8 migration.
+      - dependency-name: "@babel/*"
+        update-types: ["version-update:semver-major"]
+
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
