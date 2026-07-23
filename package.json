@@ -62,7 +62,9 @@
   },
   "overrides": {
     "esbuild": ">=0.28.1",
-    "brace-expansion": ">=5.0.7"
+    "brace-expansion": ">=5.0.7",
+    "svgo": ">=2.8.3",
+    "js-yaml": ">=3.15.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.29.7",
