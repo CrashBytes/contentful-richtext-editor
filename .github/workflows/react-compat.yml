@@ -167,11 +167,12 @@ jobs:
     if: github.ref == 'refs/heads/main' && always()
     permissions:
       contents: write
-    
+      pull-requests: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Generate compatibility status
         id: compat-status
         run: |
@@ -184,7 +185,7 @@ jobs:
             echo "color=yellow" >> $GITHUB_OUTPUT
             echo "message=React 18 only" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Create compatibility badge data
         run: |
           mkdir -p .github/badges
@@ -196,11 +197,12 @@ jobs:
             "color": "${{ steps.compat-status.outputs.color }}"
           }
           EOF
-      
-      - name: Commit badge data
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add .github/badges/react-compat.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "chore: update React compatibility badge [skip ci]"
-          git push
+
+      - name: Create Pull Request for badge update
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: "chore: update React compatibility badge"
+          title: "chore: update React compatibility badge"
+          body: "Automated update of React compatibility status badge"
+          branch: "chore/update-react-compat-badge"
+          delete-branch: true
